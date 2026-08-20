@@ -173,6 +173,20 @@ planningpoker:
   any failure.
 - See [Section 10](#10-performance) for performance-specific tests.
 
+## 9. Documentation & Branding
+
+- `README.md` must be fully populated with real project documentation, not
+  left as a placeholder title. At minimum cover: what the app is/does, a
+  feature list, a quick-start / run guide (local dev + Docker), and the tech
+  stack. Loosely follow the structure of a well-documented project README
+  such as [github/spec-kit](https://github.com/github/spec-kit#-get-started)
+  (table of contents, clear feature list, get-started steps) as inspiration,
+  not a template to copy verbatim.
+- The project must have a dedicated **SVG icon/logo**, checked into the repo,
+  so the product has a real visual identity (used in the README header, and
+  as the favicon / Blazor app icon). Style should reflect the green, friendly
+  visual language described in [Section 7](#7-visual-design).
+
 ## 10. Performance
 
 The app should be fast by construction, not just "tested for speed" after the
