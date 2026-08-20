@@ -21,6 +21,10 @@ container image. One language (C#) end-to-end, no separate JS/npm toolchain —
 the API serves the Blazor WASM build as static files and exposes real-time
 game state over SignalR or raw WebSockets.
 
+- The solution (`.sln`) and project (`.csproj`) files must live at the root
+  level of the repository, not nested inside an extra `src/` (or similar)
+  subdirectory.
+
 ## 2. Developer Experience
 
 - Must be debuggable from VS Code with F5 — a working `.vscode/launch.json`
