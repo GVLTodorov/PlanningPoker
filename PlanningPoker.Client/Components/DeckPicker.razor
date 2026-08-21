@@ -1,0 +1,28 @@
+<label class="field">
+    <span class="field-label">Deck</span>
+    <select class="deck-select" value="@SelectedDeckType" @onchange="OnChanged">
+        @foreach (var deck in Decks)
+        {
+            <option value="@deck.DeckType">@deck.DisplayName (@FormatValues(deck))</option>
+        }
+    </select>
+</label>
+
+@code {
+    [Parameter, EditorRequired]
+    public IReadOnlyList<DeckDto> Decks { get; set; } = [];
+
+    [Parameter]
+    public DeckType SelectedDeckType { get; set; }
+
+    [Parameter]
+    public EventCallback<DeckType> SelectedDeckTypeChanged { get; set; }
+
+    private static string FormatValues(DeckDto deck) => string.Join(", ", deck.Cards.Select(c => c.Label));
+
+    private Task OnChanged(ChangeEventArgs args)
+    {
+        var deckType = Enum.Parse<DeckType>((string)args.Value!);
+        return SelectedDeckTypeChanged.InvokeAsync(deckType);
+    }
+}

@@ -1,0 +1,49 @@
+@inject IJSRuntime JsRuntime
+
+<div class="player-setup">
+    <label class="field">
+        <span class="field-label">Your name</span>
+        <input class="text-input" id="@_nameInputId" type="text" maxlength="40" required
+               value="@Name" @oninput="OnNameInput" placeholder="e.g. Alex" />
+    </label>
+
+    <div class="field">
+        <span class="field-label">Choose an avatar</span>
+        <AvatarPicker AvatarUrls="AvatarUrls" SelectedUrl="@AvatarUrl" SelectedUrlChanged="OnAvatarSelected" />
+    </div>
+</div>
+
+@code {
+    private readonly string _nameInputId = $"player-name-{Guid.NewGuid():N}";
+    private IJSObjectReference? _module;
+
+    [Parameter, EditorRequired]
+    public string Name { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> NameChanged { get; set; }
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<string> AvatarUrls { get; set; } = [];
+
+    [Parameter]
+    public string? AvatarUrl { get; set; }
+
+    [Parameter]
+    public EventCallback<string> AvatarUrlChanged { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        _module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/interop.js");
+        await _module.InvokeVoidAsync("focusElement", $"#{_nameInputId}");
+    }
+
+    private Task OnNameInput(ChangeEventArgs args) => NameChanged.InvokeAsync((string?)args.Value ?? string.Empty);
+
+    private Task OnAvatarSelected(string url) => AvatarUrlChanged.InvokeAsync(url);
+}

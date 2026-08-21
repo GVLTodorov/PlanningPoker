@@ -1,0 +1,41 @@
+@if (Status == RoundStatus.Voting)
+{
+    <button type="button" class="primary-button reveal-button" disabled="@(!CanReveal)" @onclick="OnReveal">
+        Reveal
+    </button>
+}
+else
+{
+    <button type="button" class="primary-button reset-button" @onclick="OnReset">
+        Reset
+    </button>
+}
+
+@code {
+    private RoundStatus _lastStatus;
+    private bool _lastCanReveal;
+    private bool _firstRender = true;
+
+    [Parameter]
+    public RoundStatus Status { get; set; }
+
+    [Parameter]
+    public bool CanReveal { get; set; }
+
+    [Parameter]
+    public EventCallback OnReveal { get; set; }
+
+    [Parameter]
+    public EventCallback OnReset { get; set; }
+
+    // Same button occupies this spot regardless of how many other players pick a card, so it only
+    // needs to re-render when the two values that actually change its label/enabled-state change.
+    protected override bool ShouldRender()
+    {
+        var changed = _firstRender || Status != _lastStatus || CanReveal != _lastCanReveal;
+        _firstRender = false;
+        _lastStatus = Status;
+        _lastCanReveal = CanReveal;
+        return changed;
+    }
+}

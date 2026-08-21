@@ -1,0 +1,31 @@
+<div class="hand-selector" role="group" aria-label="Pick your estimate">
+    @foreach (var card in Deck)
+    {
+        <button type="button"
+                class="hand-card @(card.Index == SelectedCardIndex ? "hand-card-selected" : "")"
+                disabled="@Disabled"
+                @onclick="() => ToggleAsync(card.Index)">
+            @card.Label
+        </button>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public IReadOnlyList<CardOptionDto> Deck { get; set; } = [];
+
+    [Parameter]
+    public int? SelectedCardIndex { get; set; }
+
+    [Parameter]
+    public bool Disabled { get; set; }
+
+    [Parameter]
+    public EventCallback<int?> SelectedCardIndexChanged { get; set; }
+
+    private Task ToggleAsync(int index)
+    {
+        var newValue = SelectedCardIndex == index ? null : (int?)index;
+        return SelectedCardIndexChanged.InvokeAsync(newValue);
+    }
+}

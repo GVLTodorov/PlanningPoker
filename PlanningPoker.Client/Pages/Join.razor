@@ -1,0 +1,70 @@
+@page "/room/{RoomId}/join"
+@inject RoomApiClient RoomApi
+@inject PlayerSessionState Session
+@inject NavigationManager Navigation
+
+<section class="screen join-screen">
+    @if (_notFound)
+    {
+        <h1>Room not found</h1>
+        <p>This room may have ended. Double-check the link, or start a new one.</p>
+        <a class="primary-button" href="/">Create a new room</a>
+    }
+    else if (_room is not null)
+    {
+        <h1>Join "@_room.Name"</h1>
+
+        <form class="stack-form" @onsubmit="JoinRoom">
+            <PlayerSetupForm Name="@_playerName" NameChanged="@(v => _playerName = v)"
+                              AvatarUrls="_avatarUrls" AvatarUrl="@_avatarUrl" AvatarUrlChanged="@(v => _avatarUrl = v)" />
+
+            @if (!string.IsNullOrEmpty(_error))
+            {
+                <p class="form-error" role="alert">@_error</p>
+            }
+
+            <button type="submit" class="primary-button">Join Room</button>
+        </form>
+    }
+</section>
+
+@code {
+    [Parameter]
+    public string RoomId { get; set; } = string.Empty;
+
+    private RoomSummaryDto? _room;
+    private bool _notFound;
+    private string _playerName = string.Empty;
+    private string? _avatarUrl;
+    private IReadOnlyList<string> _avatarUrls = [];
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var roomTask = RoomApi.GetRoomAsync(RoomId);
+        var avatarsTask = RoomApi.GetRandomAvatarsAsync();
+
+        await Task.WhenAll(roomTask, avatarsTask);
+
+        _room = await roomTask;
+        _avatarUrls = await avatarsTask;
+        _avatarUrl = _avatarUrls.Count > 0 ? _avatarUrls[0] : null;
+        _notFound = _room is null;
+    }
+
+    // Enter submits natively -- this is a real <form>, no separate button-click handling needed.
+    private void JoinRoom()
+    {
+        if (string.IsNullOrWhiteSpace(_playerName))
+        {
+            _error = "Please enter your name.";
+            return;
+        }
+
+        Session.PlayerName = _playerName.Trim();
+        Session.AvatarUrl = _avatarUrl;
+        Session.IsSpectator = false;
+
+        Navigation.NavigateTo($"/room/{RoomId}");
+    }
+}

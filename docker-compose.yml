@@ -1,0 +1,18 @@
+# Example compose file. Adapted from the archived reference project's deployment shape
+# (see REQUIREMENTS.MD Section 4.1) -- same two Giphy env vars, new image name/port, and no volume
+# since this app keeps no state on disk (rooms are purely in-memory and vanish once empty).
+services:
+  planningpoker:
+    image: ghcr.io/gvltodorov/planningpoker:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: planningpoker
+    restart: unless-stopped
+    ports:
+      - 8140:8080
+    environment:
+      # Both are optional -- the app runs fine with no visible Giphy features when they're unset.
+      # The real API key is shared out-of-band and injected only at deploy time; never commit it.
+      - GIPHY_API_BASE_URL=https://api.giphy.com/v1/gifs/trending?api_key=YOUR_GIPHY_API_KEY
+      - GIPHY_API_QUERY=limit=5&offset=0&rating=g&lang=en&bundle=low_bandwidth

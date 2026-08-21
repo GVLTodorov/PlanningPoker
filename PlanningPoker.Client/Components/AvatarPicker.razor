@@ -1,0 +1,32 @@
+@if (AvatarUrls.Count == 0)
+{
+    <p class="avatar-picker-empty">No avatars available right now — you can still continue.</p>
+}
+else
+{
+    <div class="avatar-picker" role="radiogroup" aria-label="Choose an avatar">
+        @foreach (var url in AvatarUrls)
+        {
+            <button type="button"
+                    class="avatar-option @(url == SelectedUrl ? "avatar-option-selected" : "")"
+                    role="radio"
+                    aria-checked="@(url == SelectedUrl ? "true" : "false")"
+                    @onclick="() => SelectAsync(url)">
+                <img src="@url" alt="Avatar option" loading="lazy" />
+            </button>
+        }
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public IReadOnlyList<string> AvatarUrls { get; set; } = [];
+
+    [Parameter]
+    public string? SelectedUrl { get; set; }
+
+    [Parameter]
+    public EventCallback<string> SelectedUrlChanged { get; set; }
+
+    private Task SelectAsync(string url) => SelectedUrlChanged.InvokeAsync(url);
+}

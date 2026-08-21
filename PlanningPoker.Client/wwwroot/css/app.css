@@ -1,0 +1,410 @@
+/* Design tokens -- green palette, larger-than-default sizing (REQUIREMENTS.MD Section 7):
+   bigger fonts/buttons/touch-targets, generous spacing, for readability/ease of use. */
+:root {
+    --color-green-50: #eafbea;
+    --color-green-100: #cdf3d1;
+    --color-green-200: #9fe4a8;
+    --color-green-400: #4caf60;
+    --color-green-600: #2e8b46;
+    --color-green-700: #1b7a3d;
+    --color-green-800: #145c2e;
+    --color-green-900: #0d3f20;
+    --color-surface: #ffffff;
+    --color-surface-muted: #f4faf5;
+    --color-text: #12291a;
+    --color-text-muted: #4b6355;
+    --color-danger: #b3261e;
+    --space-1: 0.5rem;
+    --space-2: 0.75rem;
+    --space-3: 1rem;
+    --space-4: 1.5rem;
+    --space-5: 2rem;
+    --radius: 0.75rem;
+    --touch-target: 3rem;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    font-family: 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 18px;
+    color: var(--color-text);
+    background: var(--color-green-50);
+}
+
+h1 {
+    font-size: 2rem;
+    color: var(--color-green-800);
+    margin: 0 0 var(--space-1) 0;
+}
+
+h1:focus {
+    outline: none;
+}
+
+.tagline {
+    color: var(--color-text-muted);
+    margin: 0 0 var(--space-4) 0;
+    font-size: 1.1rem;
+}
+
+a {
+    color: var(--color-green-700);
+}
+
+.app-shell {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: var(--space-5) var(--space-3);
+}
+
+.screen {
+    width: 100%;
+    max-width: 40rem;
+}
+
+.board-screen {
+    max-width: 56rem;
+}
+
+/* Forms & inputs */
+
+.stack-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    background: var(--color-surface);
+    padding: var(--space-4);
+    border-radius: var(--radius);
+    box-shadow: 0 1px 3px rgba(13, 63, 32, 0.12);
+}
+
+.player-setup {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.field-label {
+    font-weight: 600;
+    color: var(--color-green-800);
+}
+
+.text-input, .deck-select {
+    font-size: 1.1rem;
+    padding: var(--space-2) var(--space-3);
+    min-height: var(--touch-target);
+    border: 2px solid var(--color-green-200);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+    color: var(--color-text);
+}
+
+.text-input:focus-visible, .deck-select:focus-visible {
+    outline: 3px solid var(--color-green-600);
+    outline-offset: 1px;
+}
+
+.form-error {
+    color: var(--color-danger);
+    font-weight: 600;
+    margin: 0;
+}
+
+/* Buttons */
+
+.primary-button, .secondary-button {
+    font-size: 1.15rem;
+    font-weight: 700;
+    min-height: var(--touch-target);
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius);
+    border: none;
+    cursor: pointer;
+}
+
+.primary-button {
+    background: var(--color-green-700);
+    color: white;
+}
+
+.primary-button:hover:not(:disabled) {
+    background: var(--color-green-800);
+}
+
+.primary-button:disabled {
+    background: var(--color-green-200);
+    color: var(--color-text-muted);
+    cursor: not-allowed;
+}
+
+.secondary-button {
+    background: var(--color-surface);
+    color: var(--color-green-800);
+    border: 2px solid var(--color-green-400);
+}
+
+.secondary-button:hover {
+    background: var(--color-green-50);
+}
+
+.primary-button:focus-visible, .secondary-button:focus-visible {
+    outline: 3px solid var(--color-green-600);
+    outline-offset: 2px;
+}
+
+/* Avatar picker */
+
+.avatar-picker {
+    display: flex;
+    gap: var(--space-3);
+}
+
+.avatar-picker-empty {
+    color: var(--color-text-muted);
+}
+
+.avatar-option {
+    padding: 0;
+    width: 4.5rem;
+    height: 4.5rem;
+    border-radius: 50%;
+    border: 3px solid transparent;
+    overflow: hidden;
+    cursor: pointer;
+    background: var(--color-surface-muted);
+}
+
+.avatar-option img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-option-selected {
+    border-color: var(--color-green-600);
+    box-shadow: 0 0 0 3px var(--color-green-100);
+}
+
+.avatar-option:focus-visible {
+    outline: 3px solid var(--color-green-600);
+    outline-offset: 2px;
+}
+
+/* Board */
+
+.board-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+    margin-bottom: var(--space-4);
+}
+
+.player-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+    gap: var(--space-3);
+    margin: var(--space-4) 0;
+}
+
+.player-card {
+    position: relative;
+    min-height: 6rem;
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--color-surface);
+    box-shadow: 0 1px 3px rgba(13, 63, 32, 0.12);
+    border: 2px solid transparent;
+}
+
+.player-card-local {
+    border-color: var(--color-green-400);
+}
+
+.player-card-background {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    opacity: 0.18;
+}
+
+.player-card-content {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-1);
+    height: 100%;
+    padding: var(--space-3);
+    text-align: center;
+}
+
+.player-card-name {
+    font-weight: 700;
+    color: var(--color-text);
+    background: rgba(255, 255, 255, 0.85);
+    padding: 0.1rem 0.5rem;
+    border-radius: 0.4rem;
+}
+
+.player-card-spectator .player-card-name {
+    color: var(--color-text-muted);
+}
+
+.player-card-badge {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+}
+
+.player-card-value {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--color-green-800);
+}
+
+.player-card-picked {
+    font-size: 1.5rem;
+    color: var(--color-green-600);
+}
+
+.player-card-waiting {
+    display: block;
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 50%;
+    border: 2px solid var(--color-green-200);
+}
+
+/* Hand selector */
+
+.hand-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin: var(--space-4) 0;
+}
+
+.hand-card {
+    min-width: 3.5rem;
+    min-height: 5rem;
+    font-size: 1.25rem;
+    font-weight: 700;
+    border-radius: var(--radius);
+    border: 2px solid var(--color-green-400);
+    background: var(--color-surface);
+    color: var(--color-green-800);
+    cursor: pointer;
+}
+
+.hand-card:hover:not(:disabled) {
+    background: var(--color-green-50);
+}
+
+.hand-card-selected {
+    background: var(--color-green-700);
+    color: white;
+    border-color: var(--color-green-800);
+}
+
+.hand-card:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.hand-card:focus-visible {
+    outline: 3px solid var(--color-green-600);
+    outline-offset: 2px;
+}
+
+/* Gif panel */
+
+.gif-panel {
+    margin-top: var(--space-4);
+}
+
+.gif-panel img {
+    max-width: 100%;
+    border-radius: var(--radius);
+    box-shadow: 0 1px 3px rgba(13, 63, 32, 0.12);
+}
+
+/* Framework infrastructure (unchanged behavior, restyled to match the palette) */
+
+#blazor-error-ui {
+    color-scheme: light only;
+    background: lightyellow;
+    bottom: 0;
+    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+    box-sizing: border-box;
+    display: none;
+    left: 0;
+    padding: 0.6rem 1.25rem 0.7rem 1.25rem;
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+}
+
+#blazor-error-ui .dismiss {
+    cursor: pointer;
+    position: absolute;
+    right: 0.75rem;
+    top: 0.5rem;
+}
+
+.blazor-error-boundary {
+    background: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTYiIGhlaWdodD0iNDkiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIG92ZXJmbG93PSJoaWRkZW4iPjxkZWZzPjxjbGlwUGF0aCBpZD0iY2xpcDAiPjxyZWN0IHg9IjIzNSIgeT0iNTEiIHdpZHRoPSI1NiIgaGVpZ2h0PSI0OSIvPjwvY2xpcFBhdGg+PC9kZWZzPjxnIGNsaXAtcGF0aD0idXJsKCNjbGlwMCkiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC0yMzUgLTUxKSI+PHBhdGggZD0iTTI2My41MDYgNTFDMjY0LjcxNyA1MSAyNjUuODEzIDUxLjQ4MzcgMjY2LjYwNiA1Mi4yNjU4TDI2Ny4wNTIgNTIuNzk4NyAyNjcuNTM5IDUzLjYyODMgMjkwLjE4NSA5Mi4xODMxIDI5MC41NDUgOTIuNzk1IDI5MC42NTYgOTIuOTk2QzI5MC44NzcgOTMuNTEzIDI5MSA5NC4wODE1IDI5MSA5NC42NzgyIDI5MSA5Ny4wNjUxIDI4OS4wMzggOTkgMjg2LjYxNyA5OUwyNDAuMzgzIDk5QzIzNy45NjMgOTkgMjM2IDk3LjA2NTEgMjM2IDk0LjY3ODIgMjM2IDk0LjM3OTkgMjM2LjAzMSA5NC4wODg2IDIzNi4wODkgOTMuODA3MkwyMzYuMzM4IDkzLjAxNjIgMjM2Ljg1OCA5Mi4xMzE0IDI1OS40NzMgNTMuNjI5NCAyNTkuOTYxIDUyLjc5ODUgMjYwLjQwNyA1Mi4yNjU4QzI2MS4yIDUxLjQ4MzcgMjYyLjI5NiA1MSAyNjMuNTA2IDUxWk0yNjMuNTg2IDY2LjAxODNDMjYwLjczNyA2Ni4wMTgzIDI1OS4zMTMgNjcuMTI0NSAyNTkuMzEzIDY5LjMzNyAyNTkuMzEzIDY5LjYxMDIgMjU5LjMzMiA2OS44NjA4IDI1OS4zNzEgNzAuMDg4N0wyNjEuNzk1IDg0LjAxNjEgMjY1LjM4IDg0LjAxNjEgMjY3LjgyMSA2OS43NDc1QzI2Ny44NiA2OS43MzA5IDI2Ny44NzkgNjkuNTg3NyAyNjcuODc5IDY5LjMxNzkgMjY3Ljg3OSA2Ny4xMTgyIDI2Ni40NDggNjYuMDE4MyAyNjMuNTg2IDY2LjAxODNaTTI2My41NzYgODYuMDU0N0MyNjEuMDQ5IDg2LjA1NDcgMjU5Ljc4NiA4Ny4zMDA1IDI1OS43ODYgODkuNzkyMSAyNTkuNzg2IDkyLjI4MzcgMjYxLjA0OSA5My41Mjk1IDI2My41NzYgOTMuNTI5NSAyNjYuMTE2IDkzLjUyOTUgMjY3LjM4NyA5Mi4yODM3IDI2Ny4zODcgODkuNzkyMSAyNjcuMzg3IDg3LjMwMDUgMjY2LjExNiA4Ni4wNTQ3IDI2My41NzYgODYuMDU0N1oiIGZpbGw9IiNGRkU1MDAiIGZpbGwtcnVsZT0iZXZlbm9kZCIvPjwvZz48L3N2Zz4=) no-repeat 1rem/1.8rem, #b32121;
+    padding: 1rem 1rem 1rem 3.7rem;
+    color: white;
+}
+
+.blazor-error-boundary::after {
+    content: "An error has occurred.";
+}
+
+.loading-progress {
+    position: absolute;
+    display: block;
+    width: 8rem;
+    height: 8rem;
+    inset: 20vh 0 auto 0;
+    margin: 0 auto 0 auto;
+}
+
+.loading-progress circle {
+    fill: none;
+    stroke: var(--color-green-100);
+    stroke-width: 0.6rem;
+    transform-origin: 50% 50%;
+    transform: rotate(-90deg);
+}
+
+.loading-progress circle:last-child {
+    stroke: var(--color-green-700);
+    stroke-dasharray: calc(3.141 * var(--blazor-load-percentage, 0%) * 0.8), 500%;
+    transition: stroke-dasharray 0.05s ease-in-out;
+}
+
+.loading-progress-text {
+    position: absolute;
+    text-align: center;
+    font-weight: bold;
+    inset: calc(20vh + 3.25rem) 0 auto 0.2rem;
+}
+
+.loading-progress-text:after {
+    content: var(--blazor-load-percentage-text, "Loading");
+}

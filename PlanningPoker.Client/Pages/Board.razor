@@ -1,0 +1,171 @@
+@page "/room/{RoomId}"
+@implements IAsyncDisposable
+@inject PlayerSessionState Session
+@inject NavigationManager Navigation
+@inject RoomApiClient RoomApi
+@inject IJSRuntime JsRuntime
+
+<section class="screen board-screen">
+    @if (_state is null)
+    {
+        <p>Connecting…</p>
+    }
+    else
+    {
+        <header class="board-header">
+            <h1>@_state.Name</h1>
+            <button type="button" class="secondary-button" @onclick="CopyInviteLinkAsync">
+                @(_linkCopied ? "Link copied!" : "Copy invite link")
+            </button>
+        </header>
+
+        <DeckPicker Decks="_decks" SelectedDeckType="_state.DeckType" SelectedDeckTypeChanged="ChangeDeckAsync" />
+
+        <PlayerList Players="_state.Players" LocalPlayerId="_playerId" />
+
+        <HandSelector Deck="CurrentDeck" SelectedCardIndex="_myCardIndex"
+                      Disabled="@(Session.IsSpectator || _state.Status == RoundStatus.Revealed)"
+                      SelectedCardIndexChanged="PickCardAsync" />
+
+        <RevealResetButton Status="_state.Status" CanReveal="CanReveal" OnReveal="RevealAsync" OnReset="ResetAsync" />
+
+        <GifPanel GifUrl="_gifUrl" />
+    }
+</section>
+
+@code {
+    [Parameter]
+    public string RoomId { get; set; } = string.Empty;
+
+    private GameHubClient? _hub;
+    private RoomStateDto? _state;
+    private Guid _playerId;
+    private IReadOnlyList<DeckDto> _decks = [];
+    private string? _gifUrl;
+    private bool _linkCopied;
+    private int? _myCardIndex;
+    private IJSObjectReference? _jsModule;
+
+    private IReadOnlyList<CardOptionDto> CurrentDeck =>
+        _decks.FirstOrDefault(d => d.DeckType == _state?.DeckType)?.Cards ?? [];
+
+    private bool CanReveal =>
+        _state is { Status: RoundStatus.Voting } state &&
+        state.Players.Where(p => !p.IsSpectator).ToList() is { Count: > 0 } activePlayers &&
+        activePlayers.All(p => p.HasPicked);
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (string.IsNullOrWhiteSpace(Session.PlayerName))
+        {
+            Navigation.NavigateTo($"/room/{RoomId}/join");
+            return;
+        }
+
+        _decks = await RoomApi.GetDecksAsync();
+
+        _hub = new GameHubClient(Navigation);
+        _hub.RoomStateChanged += OnRoomStateChanged;
+        _hub.PlayerPickChanged += OnPlayerPickChanged;
+        _hub.RoundRevealed += OnRoundRevealed;
+        _hub.RoundReset += OnRoundReset;
+
+        await _hub.StartAsync();
+        var result = await _hub.JoinRoomAsync(RoomId, Session.PlayerName, Session.IsSpectator, Session.AvatarUrl);
+        _playerId = result.PlayerId;
+        _state = result.State;
+    }
+
+    private void OnRoomStateChanged(RoomStateDto state)
+    {
+        _state = state;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void OnPlayerPickChanged(PlayerPickStatusChanged change)
+    {
+        if (_state is null)
+        {
+            return;
+        }
+
+        _state = _state with
+        {
+            Players = _state.Players
+                .Select(p => p.PlayerId == change.PlayerId ? p with { HasPicked = change.HasPicked } : p)
+                .ToList(),
+        };
+
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void OnRoundRevealed(RoundRevealed revealed)
+    {
+        if (_state is null)
+        {
+            return;
+        }
+
+        _state = _state with { Status = RoundStatus.Revealed, Players = revealed.Players.ToList() };
+        _gifUrl = revealed.GifUrl;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void OnRoundReset()
+    {
+        if (_state is null)
+        {
+            return;
+        }
+
+        _state = _state with
+        {
+            Status = RoundStatus.Voting,
+            Players = _state.Players.Select(p => p with { HasPicked = false, Card = null }).ToList(),
+        };
+        _gifUrl = null;
+        _myCardIndex = null;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private Task ChangeDeckAsync(DeckType deckType) => _hub?.SetDeckAsync(deckType) ?? Task.CompletedTask;
+
+    private async Task PickCardAsync(int? cardIndex)
+    {
+        _myCardIndex = cardIndex;
+        if (_hub is not null)
+        {
+            await _hub.PickCardAsync(cardIndex);
+        }
+    }
+
+    private Task RevealAsync() => _hub?.RevealAsync() ?? Task.CompletedTask;
+
+    private Task ResetAsync() => _hub?.ResetAsync() ?? Task.CompletedTask;
+
+    private async Task CopyInviteLinkAsync()
+    {
+        _jsModule ??= await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/interop.js");
+        var url = Navigation.ToAbsoluteUri($"/room/{RoomId}/join").ToString();
+        await _jsModule.InvokeVoidAsync("copyToClipboard", url);
+        _linkCopied = true;
+        StateHasChanged();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_hub is not null)
+        {
+            _hub.RoomStateChanged -= OnRoomStateChanged;
+            _hub.PlayerPickChanged -= OnPlayerPickChanged;
+            _hub.RoundRevealed -= OnRoundRevealed;
+            _hub.RoundReset -= OnRoundReset;
+            await _hub.DisposeAsync();
+        }
+
+        if (_jsModule is not null)
+        {
+            await _jsModule.DisposeAsync();
+        }
+    }
+}

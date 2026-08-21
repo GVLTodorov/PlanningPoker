@@ -89,7 +89,9 @@ planningpoker:
 2. Keyboard focus starts on the **your name** field (the thing the user
    actually needs to type).
 3. Show **3 random avatar images fetched from Giphy** for the user to pick
-   from as their player avatar.
+   from as their player avatar. The **first avatar is selected by default**,
+   and the currently selected avatar shows a **green highlight border**
+   around it so the user can tell which one is picked.
 4. **Deck picker** is a dropdown; each option shows the deck's short label
    plus its actual values in brackets, e.g.:
    - `Fibonacci (0, 1, 2, 3, 5, 8, 13, 21, ...)`
@@ -108,7 +110,8 @@ planningpoker:
 
 1. A second user opens the shared room URL.
 2. Show **3 random avatar images from Giphy** to pick from, same as the
-   create flow.
+   create flow (first avatar selected by default, selected avatar shows a
+   green highlight border).
 3. Keyboard focus starts on the **your name** textbox.
 4. Pressing **Enter** submits the join (no separate button click required).
 
