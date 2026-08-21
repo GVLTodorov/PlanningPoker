@@ -14,12 +14,18 @@
     {
         <header class="board-header">
             <h1>@_state.Name</h1>
-            <button type="button" class="secondary-button" @onclick="CopyInviteLinkAsync">
-                @(_linkCopied ? "Link copied!" : "Copy invite link")
-            </button>
+            <div class="board-header-actions">
+                <GifPanel GifUrl="@_gifUrl" />
+                <button type="button" class="secondary-button" @onclick="CopyInviteLinkAsync">
+                    @(_linkCopied ? "Link copied!" : "Copy invite link")
+                </button>
+            </div>
         </header>
 
-        <DeckPicker Decks="_decks" SelectedDeckType="_state.DeckType" SelectedDeckTypeChanged="ChangeDeckAsync" />
+        <div class="field">
+            <span class="field-label">Deck</span>
+            <p class="deck-readonly">@CurrentDeckSummary</p>
+        </div>
 
         <PlayerList Players="_state.Players" LocalPlayerId="_playerId" />
 
@@ -28,8 +34,6 @@
                       SelectedCardIndexChanged="PickCardAsync" />
 
         <RevealResetButton Status="_state.Status" CanReveal="CanReveal" OnReveal="RevealAsync" OnReset="ResetAsync" />
-
-        <GifPanel GifUrl="_gifUrl" />
     }
 </section>
 
@@ -49,7 +53,15 @@
     private IReadOnlyList<CardOptionDto> CurrentDeck =>
         _decks.FirstOrDefault(d => d.DeckType == _state?.DeckType)?.Cards ?? [];
 
+    private string CurrentDeckSummary =>
+        _decks.FirstOrDefault(d => d.DeckType == _state?.DeckType) is { } deck
+            ? $"{deck.DisplayName} ({string.Join(", ", deck.Cards.Select(c => c.Label))})"
+            : string.Empty;
+
+    private bool IsHost => _state?.Players.FirstOrDefault(p => p.PlayerId == _playerId)?.IsHost ?? false;
+
     private bool CanReveal =>
+        IsHost &&
         _state is { Status: RoundStatus.Voting } state &&
         state.Players.Where(p => !p.IsSpectator).ToList() is { Count: > 0 } activePlayers &&
         activePlayers.All(p => p.HasPicked);
@@ -127,8 +139,6 @@
         _myCardIndex = null;
         InvokeAsync(StateHasChanged);
     }
-
-    private Task ChangeDeckAsync(DeckType deckType) => _hub?.SetDeckAsync(deckType) ?? Task.CompletedTask;
 
     private async Task PickCardAsync(int? cardIndex)
     {

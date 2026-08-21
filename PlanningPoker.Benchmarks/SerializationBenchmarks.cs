@@ -26,6 +26,7 @@ public class SerializationBenchmarks
                 Guid.NewGuid(),
                 $"Player{i}",
                 IsSpectator: false,
+                IsHost: i == 0,
                 AvatarUrl: "https://example.test/a.gif",
                 HasPicked: true,
                 Card: new CardOptionDto(i % 11, i, i.ToString())))

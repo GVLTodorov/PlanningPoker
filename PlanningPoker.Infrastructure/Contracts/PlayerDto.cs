@@ -5,6 +5,7 @@ public sealed record PlayerDto(
     Guid PlayerId,
     string Name,
     bool IsSpectator,
+    bool IsHost,
     string? AvatarUrl,
     bool HasPicked,
     CardOptionDto? Card);

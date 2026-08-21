@@ -35,5 +35,5 @@ public class RoomBenchmarks
     public IReadOnlyList<PlayerView> GetState() => _room.GetState();
 
     [Benchmark]
-    public void Reveal() => _room.Reveal();
+    public void Reveal() => _room.Reveal(_playerId);
 }

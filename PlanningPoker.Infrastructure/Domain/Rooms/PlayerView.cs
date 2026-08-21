@@ -11,6 +11,7 @@ public sealed record PlayerView(
     Guid PlayerId,
     string Name,
     bool IsSpectator,
+    bool IsHost,
     string? AvatarUrl,
     bool HasPicked,
     CardOption? Card);

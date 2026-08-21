@@ -23,8 +23,8 @@ public class PlanningPokerJsonContextTests
             DeckType.Fibonacci,
             RoundStatus.Revealed,
             [
-                new PlayerDto(Guid.NewGuid(), "Alice", false, "https://example.test/a.gif", true, new CardOptionDto(2, 2, "2")),
-                new PlayerDto(Guid.NewGuid(), "Bob", true, null, false, null),
+                new PlayerDto(Guid.NewGuid(), "Alice", false, true, "https://example.test/a.gif", true, new CardOptionDto(2, 2, "2")),
+                new PlayerDto(Guid.NewGuid(), "Bob", true, false, null, false, null),
             ]);
 
         var json = JsonSerializer.Serialize(original, Options);
@@ -74,7 +74,7 @@ public class PlanningPokerJsonContextTests
     public void RoundRevealed_RoundTrips()
     {
         var original = new RoundRevealed(
-            [new PlayerDto(Guid.NewGuid(), "Alice", false, null, true, new CardOptionDto(0, 0, "0"))],
+            [new PlayerDto(Guid.NewGuid(), "Alice", false, true, null, true, new CardOptionDto(0, 0, "0"))],
             "https://example.test/reveal.gif");
 
         var json = JsonSerializer.Serialize(original, Options);

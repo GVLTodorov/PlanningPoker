@@ -68,13 +68,6 @@ public sealed class GameHub : Hub
         await BroadcastStateAsync(room);
     }
 
-    public async Task SetDeck(Contracts.DeckType deckType)
-    {
-        var (room, _) = GetTrackedRoomAndPlayer();
-        room.SetDeck(deckType.ToDomain());
-        await BroadcastStateAsync(room);
-    }
-
     public async Task PickCard(int? cardIndex)
     {
         var (room, playerId) = GetTrackedRoomAndPlayer();
@@ -86,12 +79,13 @@ public sealed class GameHub : Hub
 
     public async Task Reveal()
     {
-        var (room, _) = GetTrackedRoomAndPlayer();
+        var (room, playerId) = GetTrackedRoomAndPlayer();
 
-        // Throws RevealRequiresAllPlayersToPickException (translated to HubException by
-        // DomainExceptionHubFilter) unless every non-spectator has picked — enforced here, not
-        // just reflected as a disabled button client-side.
-        room.Reveal();
+        // Throws OnlyHostCanRevealException / RevealRequiresAllPlayersToPickException (translated
+        // to HubException by DomainExceptionHubFilter) unless the caller is host and every
+        // non-spectator has picked — enforced here, not just reflected as a disabled button
+        // client-side.
+        room.Reveal(playerId);
 
         var gifUrls = await _giphy.GetRandomImageUrlsAsync(1);
         var revealed = new RoundRevealed(

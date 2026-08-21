@@ -45,8 +45,6 @@ public sealed class GameHubClient : IAsyncDisposable
 
     public Task SetSpectatorAsync(bool isSpectator) => _connection.InvokeAsync("SetSpectator", isSpectator);
 
-    public Task SetDeckAsync(DeckType deckType) => _connection.InvokeAsync("SetDeck", deckType);
-
     public Task PickCardAsync(int? cardIndex) => _connection.InvokeAsync("PickCard", cardIndex);
 
     public Task RevealAsync() => _connection.InvokeAsync("Reveal");

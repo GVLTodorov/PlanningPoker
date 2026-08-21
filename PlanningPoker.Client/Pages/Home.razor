@@ -19,6 +19,11 @@
 
         <DeckPicker Decks="_decks" SelectedDeckType="_deckType" SelectedDeckTypeChanged="@(v => _deckType = v)" />
 
+        <label class="field checkbox-field">
+            <input type="checkbox" checked disabled />
+            <span>Host (you'll be the only one who can reveal cards)</span>
+        </label>
+
         @if (!string.IsNullOrEmpty(_error))
         {
             <p class="form-error" role="alert">@_error</p>

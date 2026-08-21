@@ -49,6 +49,7 @@ public static class ContractMapper
         player.PlayerId,
         player.Name,
         player.IsSpectator,
+        player.IsHost,
         player.AvatarUrl,
         player.HasPicked,
         player.Card?.ToContract());

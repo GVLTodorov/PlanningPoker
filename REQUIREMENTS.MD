@@ -101,8 +101,11 @@ planningpoker:
    (Exact deck names/values confirmed against the reference repo per
    [Section 0](#0-reference-implementation).)
 
-5. Copy-URL button — copies the shareable room link to the clipboard.
-6. **Visual style:** green color palette; larger fonts, buttons, and spacing
+5. A checked, non-interactive **Host checkbox** — the room creator is always
+   the host (see [Section 5.3](#53-host--room-ownership)); this just makes
+   that visible, it isn't a toggle.
+6. Copy-URL button — copies the shareable room link to the clipboard.
+7. **Visual style:** green color palette; larger fonts, buttons, and spacing
    than a typical dense web app — optimized for readability/ease of use for
    older users.
 
@@ -112,20 +115,36 @@ planningpoker:
 2. Show **3 random avatar images from Giphy** to pick from, same as the
    create flow (first avatar selected by default, selected avatar shows a
    green highlight border).
-3. Keyboard focus starts on the **your name** textbox.
-4. Pressing **Enter** submits the join (no separate button click required).
+3. **No Host checkbox is shown** — a player who joins via link is never the
+   host (see [Section 5.3](#53-host--room-ownership)).
+4. Keyboard focus starts on the **your name** textbox.
+5. Pressing **Enter** submits the join (no separate button click required).
 
-### 5.3 Voting round lifecycle
+### 5.3 Host / room ownership
+
+- The player who **creates** the room is its **host** (enforced server-side
+  as "first player to join the room," which the creator always is — not a
+  client-supplied flag, so it can't be spoofed by a later joiner).
+- **Only the host can reveal cards.** The Reveal button is disabled for
+  everyone else even once all non-spectator players have picked; attempting
+  to reveal as a non-host is also rejected server-side.
+- A room's **deck is fixed at creation time and cannot be changed** once
+  inside the room — the deck picker on the create screen is the only place
+  it can be set. The board screen shows the deck name and values as
+  read-only text, not a dropdown.
+
+### 5.4 Voting round lifecycle
 
 1. Players pick a card. Picked/not-picked state is visible to everyone;
    actual values stay hidden until reveal.
-2. The **Reveal** action is only enabled once **every non-spectator player
-   has picked a card**.
+2. The **Reveal** action is only enabled for the **host**, and only once
+   **every non-spectator player has picked a card**.
 3. On reveal:
    - All hands become visible.
    - The **Reveal** button is replaced by a **Reset** button in the same
      spot.
-   - A **random Giphy gif** appears on the right side of the screen (see
+   - A **random Giphy gif** appears as a small thumbnail card in the header,
+     to the left of the Copy invite link button (see
      [Section 8](#8-giphy-integration)).
 4. Clicking **Reset**:
    - Clears all picks and starts a new round.
@@ -133,7 +152,7 @@ planningpoker:
    - The button reverts back to **Reveal** (disabled until everyone has
      picked again).
 
-### 5.4 Player card appearance
+### 5.5 Player card appearance
 
 - Once chosen (in [5.1](#51-workflow-a--home-screen-create-a-room) /
   [5.2](#52-workflow-b--joining-via-a-shared-link)), a player's avatar gif is
@@ -154,7 +173,7 @@ planningpoker:
      ([5.1](#51-workflow-a--home-screen-create-a-room)) and the join screen
      ([5.2](#52-workflow-b--joining-via-a-shared-link)).
   2. **Reveal gif** — one random gif shown alongside the revealed hands
-     ([5.3](#53-voting-round-lifecycle)), cleared on reset.
+     ([5.4](#54-voting-round-lifecycle)), cleared on reset.
 
 ## 7. Visual Design
 

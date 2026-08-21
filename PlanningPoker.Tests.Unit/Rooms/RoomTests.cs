@@ -48,29 +48,24 @@ public class RoomTests
     }
 
     [Fact]
-    public void SetDeck_ClearsAllPicksAndResetsRound_WhenDeckActuallyChanges()
+    public void AddPlayer_FirstPlayerIsHost()
     {
-        var room = NewRoom(DeckType.Fibonacci);
+        var room = NewRoom();
+
         var alice = room.AddPlayer("Alice", isSpectator: false, avatarUrl: null);
-        room.PickCard(alice.Id, 0);
 
-        room.SetDeck(DeckType.Powers);
-
-        Assert.Equal(DeckType.Powers, room.DeckType);
-        Assert.Equal(RoundStatus.Voting, room.Status);
-        Assert.False(room.GetState().Single().HasPicked);
+        Assert.True(alice.IsHost);
     }
 
     [Fact]
-    public void SetDeck_DoesNothing_WhenDeckIsUnchanged()
+    public void AddPlayer_SubsequentPlayersAreNotHost()
     {
-        var room = NewRoom(DeckType.Fibonacci);
-        var alice = room.AddPlayer("Alice", isSpectator: false, avatarUrl: null);
-        room.PickCard(alice.Id, 0);
+        var room = NewRoom();
+        room.AddPlayer("Alice", isSpectator: false, avatarUrl: null);
 
-        room.SetDeck(DeckType.Fibonacci);
+        var bob = room.AddPlayer("Bob", isSpectator: false, avatarUrl: null);
 
-        Assert.True(room.GetState().Single().HasPicked);
+        Assert.False(bob.IsHost);
     }
 
     [Fact]
@@ -152,7 +147,20 @@ public class RoomTests
         room.AddPlayer("Bob", isSpectator: false, avatarUrl: null);
         room.PickCard(alice.Id, 0);
 
-        Assert.Throws<RevealRequiresAllPlayersToPickException>(() => room.Reveal());
+        Assert.Throws<RevealRequiresAllPlayersToPickException>(() => room.Reveal(alice.Id));
+        Assert.Equal(RoundStatus.Voting, room.Status);
+    }
+
+    [Fact]
+    public void Reveal_Throws_WhenCallerIsNotHost()
+    {
+        var room = NewRoom();
+        var alice = room.AddPlayer("Alice", isSpectator: false, avatarUrl: null);
+        var bob = room.AddPlayer("Bob", isSpectator: false, avatarUrl: null);
+        room.PickCard(alice.Id, 0);
+        room.PickCard(bob.Id, 0);
+
+        Assert.Throws<OnlyHostCanRevealException>(() => room.Reveal(bob.Id));
         Assert.Equal(RoundStatus.Voting, room.Status);
     }
 
@@ -165,7 +173,7 @@ public class RoomTests
         room.PickCard(alice.Id, 2);
         room.PickCard(bob.Id, 4);
 
-        room.Reveal();
+        room.Reveal(alice.Id);
 
         Assert.Equal(RoundStatus.Revealed, room.Status);
         var state = room.GetState().ToDictionary(p => p.PlayerId);
@@ -192,7 +200,7 @@ public class RoomTests
         var room = NewRoom();
         var alice = room.AddPlayer("Alice", isSpectator: false, avatarUrl: null);
         room.PickCard(alice.Id, 0);
-        room.Reveal();
+        room.Reveal(alice.Id);
 
         room.Reset();
 

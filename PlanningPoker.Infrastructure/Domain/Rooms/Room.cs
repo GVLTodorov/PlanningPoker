@@ -25,11 +25,13 @@ public sealed class Room
         DeckType = deckType;
     }
 
+    /// <summary>The first player to join an empty room becomes its host.</summary>
     public Player AddPlayer(string name, bool isSpectator, string? avatarUrl)
     {
         lock (_lock)
         {
-            var player = new Player(Guid.NewGuid(), name, isSpectator, avatarUrl);
+            var isHost = _players.Count == 0;
+            var player = new Player(Guid.NewGuid(), name, isSpectator, isHost, avatarUrl);
             _players[player.Id] = player;
             return player;
         }
@@ -50,20 +52,6 @@ public sealed class Room
         lock (_lock)
         {
             Name = newName;
-        }
-    }
-
-    public void SetDeck(DeckType deckType)
-    {
-        lock (_lock)
-        {
-            if (DeckType == deckType)
-            {
-                return;
-            }
-
-            DeckType = deckType;
-            EndTurnCore();
         }
     }
 
@@ -124,10 +112,16 @@ public sealed class Room
         }
     }
 
-    public void Reveal()
+    /// <summary>Only the host may reveal (see <see cref="AddPlayer"/>), enforced here, not just as a disabled button.</summary>
+    public void Reveal(Guid playerId)
     {
         lock (_lock)
         {
+            if (!GetPlayerCore(playerId).IsHost)
+            {
+                throw new OnlyHostCanRevealException();
+            }
+
             if (!HasAllNonSpectatorsPickedCore())
             {
                 throw new RevealRequiresAllPlayersToPickException();
@@ -174,6 +168,7 @@ public sealed class Room
                     p.Id,
                     p.Name,
                     p.IsSpectator,
+                    p.IsHost,
                     p.AvatarUrl,
                     p.HasPicked,
                     revealed ? ResolveCard(p.PickedCardIndex) : null))
