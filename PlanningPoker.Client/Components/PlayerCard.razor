@@ -1,37 +1,39 @@
 @inject IJSRuntime JsRuntime
 
-<div class="player-card @(Player.IsSpectator ? "player-card-spectator" : "") @(IsLocalPlayer ? "player-card-local" : "")">
-    @if (!string.IsNullOrEmpty(Player.AvatarUrl))
-    {
-        <div class="player-card-background" style="background-image:url('@Player.AvatarUrl')"></div>
-    }
+<div class="player-card-wrapper @(Player.IsSpectator ? "player-card-spectator" : "")">
+    <span class="player-card-name">@Player.Name</span>
 
-    @if (CanRemove)
-    {
-        <button type="button" class="player-card-remove" aria-label="Remove @Player.Name" @onclick="ConfirmAndRemoveAsync">
-            &times;
-        </button>
-    }
+    <div class="player-card @(IsLocalPlayer ? "player-card-local" : "")">
+        @if (!string.IsNullOrEmpty(Player.AvatarUrl))
+        {
+            <div class="player-card-background" style="background-image:url('@Player.AvatarUrl')"></div>
+        }
 
-    <div class="player-card-content">
-        <span class="player-card-name">@Player.Name</span>
+        @if (CanRemove)
+        {
+            <button type="button" class="player-card-remove" aria-label="Remove @Player.Name" @onclick="ConfirmAndRemoveAsync">
+                &times;
+            </button>
+        }
 
-        @if (Player.IsSpectator)
-        {
-            <span class="player-card-badge">Spectator</span>
-        }
-        else if (Player.Card is not null)
-        {
-            <span class="player-card-value">@Player.Card.Label</span>
-        }
-        else if (Player.HasPicked)
-        {
-            <span class="player-card-picked" aria-label="Picked a card">&#10003;</span>
-        }
-        else
-        {
-            <span class="player-card-waiting" aria-label="Waiting for a pick"></span>
-        }
+        <div class="player-card-content">
+            @if (Player.IsSpectator)
+            {
+                <span class="player-card-badge">Spectator</span>
+            }
+            else if (Player.Card is not null)
+            {
+                <span class="player-card-value">@Player.Card.Label</span>
+            }
+            else if (Player.HasPicked)
+            {
+                <span class="player-card-picked" aria-label="Picked a card">&#10003;</span>
+            }
+            else
+            {
+                <span class="player-card-waiting" aria-label="Waiting for a pick"></span>
+            }
+        </div>
     </div>
 </div>
 

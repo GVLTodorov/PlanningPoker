@@ -262,14 +262,22 @@ a {
 
 .player-list {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(6rem, 1fr));
     gap: var(--space-3);
     margin: var(--space-4) 0;
 }
 
+.player-card-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+}
+
 .player-card {
     position: relative;
-    min-height: 8rem;
+    width: 100%;
+    min-height: 4.5rem;
     border-radius: var(--radius);
     overflow: hidden;
     background: var(--color-surface);
@@ -291,7 +299,7 @@ a {
 }
 
 .player-card:has(.player-card-background):hover .player-card-background {
-    opacity: 0.50;
+    opacity: 1;
 }
 
 .player-card:has(.player-card-background):hover .player-card-content {
@@ -300,17 +308,17 @@ a {
 
 .player-card-remove {
     position: absolute;
-    top: 0.4rem;
-    right: 0.4rem;
+    top: 0.25rem;
+    right: 0.25rem;
     z-index: 2;
-    width: 1.75rem;
-    height: 1.75rem;
+    width: 1.4rem;
+    height: 1.4rem;
     padding: 0;
     border: none;
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.9);
     color: var(--color-danger);
-    font-size: 1.2rem;
+    font-size: 1rem;
     font-weight: 700;
     line-height: 1;
     cursor: pointer;
@@ -338,16 +346,26 @@ a {
     transition: opacity 0.2s ease;
     gap: var(--space-1);
     height: 100%;
-    padding: var(--space-3);
+    padding: var(--space-2);
     text-align: center;
 }
 
 .player-card-name {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    min-height: 2.1em;
+    max-width: 100%;
     font-weight: 700;
+    font-size: 0.78rem;
+    line-height: 1.05;
     color: var(--color-text);
-    background: rgba(255, 255, 255, 0.85);
-    padding: 0.1rem 0.5rem;
-    border-radius: 0.4rem;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    overflow-wrap: anywhere;
+    text-wrap: balance;
 }
 
 .player-card-spectator .player-card-name {
@@ -355,31 +373,45 @@ a {
 }
 
 .player-card-badge {
-    font-size: 0.85rem;
+    font-size: 0.7rem;
     color: var(--color-text-muted);
+    background: rgba(255, 255, 255, 0.85);
+    padding: 0.05rem 0.4rem;
+    border-radius: 0.4rem;
 }
 
 .player-card-value {
-    font-size: 2.5rem;
+    font-size: 1.8rem;
     font-weight: 800;
     color: var(--color-green-800);
     background: rgba(255, 255, 255, 0.85);
-    padding: 0 0.6rem;
+    padding: 0 0.5rem;
     border-radius: 0.5rem;
     line-height: 1.3;
 }
 
 .player-card-picked {
-    font-size: 1.5rem;
-    color: var(--color-green-600);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.7rem;
+    height: 1.7rem;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 1px 3px rgba(13, 63, 32, 0.35);
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--color-green-700);
 }
 
 .player-card-waiting {
     display: block;
-    width: 0.75rem;
-    height: 0.75rem;
+    width: 1rem;
+    height: 1rem;
     border-radius: 50%;
-    border: 2px solid var(--color-green-200);
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 1px 3px rgba(13, 63, 32, 0.35);
+    border: 2px solid var(--color-green-400);
 }
 
 .reveal-waiting {
