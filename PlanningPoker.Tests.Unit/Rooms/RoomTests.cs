@@ -1,5 +1,4 @@
 using PlanningPoker.Domain.Decks;
-using PlanningPoker.Domain.Errors;
 using PlanningPoker.Domain.Rooms;
 using Xunit;
 
@@ -7,8 +6,11 @@ namespace PlanningPoker.Tests.Unit.Rooms;
 
 public class RoomTests
 {
-    private static Room NewRoom(DeckType deckType = DeckType.Fibonacci) =>
-        new(RoomId.New(), "Sprint Planning", deckType);
+    private static Room NewRoom(DeckType deckType = DeckType.Fibonacci)
+    {
+        RoomId.TryParse("Sprint Planning", out var id);
+        return new Room(id, "Sprint Planning", deckType);
+    }
 
     [Fact]
     public void AddPlayer_AddsPlayerToState()
@@ -86,7 +88,7 @@ public class RoomTests
         var room = NewRoom();
         var alice = room.AddPlayer("Alice", isSpectator: true, avatarUrl: null);
 
-        Assert.Throws<SpectatorCannotPlayException>(() => room.PickCard(alice.Id, 0));
+        Assert.Throws<InvalidOperationException>(() => room.PickCard(alice.Id, 0));
     }
 
     [Fact]
@@ -95,7 +97,7 @@ public class RoomTests
         var room = NewRoom(DeckType.TrustVote);
         var alice = room.AddPlayer("Alice", isSpectator: false, avatarUrl: null);
 
-        Assert.Throws<InvalidCardValueException>(() => room.PickCard(alice.Id, 999));
+        Assert.Throws<ArgumentOutOfRangeException>(() => room.PickCard(alice.Id, 999));
     }
 
     [Fact]
@@ -115,7 +117,7 @@ public class RoomTests
     {
         var room = NewRoom();
 
-        Assert.Throws<PlayerNotInRoomException>(() => room.PickCard(Guid.NewGuid(), 0));
+        Assert.Throws<KeyNotFoundException>(() => room.PickCard(Guid.NewGuid(), 0));
     }
 
     [Fact]
@@ -147,7 +149,7 @@ public class RoomTests
         room.AddPlayer("Bob", isSpectator: false, avatarUrl: null);
         room.PickCard(alice.Id, 0);
 
-        Assert.Throws<RevealRequiresAllPlayersToPickException>(() => room.Reveal(alice.Id));
+        Assert.Throws<InvalidOperationException>(() => room.Reveal(alice.Id));
         Assert.Equal(RoundStatus.Voting, room.Status);
     }
 
@@ -160,7 +162,7 @@ public class RoomTests
         room.PickCard(alice.Id, 0);
         room.PickCard(bob.Id, 0);
 
-        Assert.Throws<OnlyHostCanRevealException>(() => room.Reveal(bob.Id));
+        Assert.Throws<UnauthorizedAccessException>(() => room.Reveal(bob.Id));
         Assert.Equal(RoundStatus.Voting, room.Status);
     }
 
@@ -202,10 +204,58 @@ public class RoomTests
         room.PickCard(alice.Id, 0);
         room.Reveal(alice.Id);
 
-        room.Reset();
+        room.Reset(alice.Id);
 
         Assert.Equal(RoundStatus.Voting, room.Status);
         Assert.False(room.GetState().Single().HasPicked);
+    }
+
+    [Fact]
+    public void Reset_Throws_WhenCallerIsNotHost()
+    {
+        var room = NewRoom();
+        var alice = room.AddPlayer("Alice", isSpectator: false, avatarUrl: null);
+        var bob = room.AddPlayer("Bob", isSpectator: false, avatarUrl: null);
+        room.PickCard(alice.Id, 0);
+        room.PickCard(bob.Id, 0);
+        room.Reveal(alice.Id);
+
+        Assert.Throws<UnauthorizedAccessException>(() => room.Reset(bob.Id));
+        Assert.Equal(RoundStatus.Revealed, room.Status);
+    }
+
+    [Fact]
+    public void RemovePlayerAsHost_RemovesTargetPlayer()
+    {
+        var room = NewRoom();
+        var alice = room.AddPlayer("Alice", isSpectator: false, avatarUrl: null);
+        var bob = room.AddPlayer("Bob", isSpectator: false, avatarUrl: null);
+
+        room.RemovePlayerAsHost(alice.Id, bob.Id);
+
+        Assert.Single(room.GetState());
+        Assert.Throws<KeyNotFoundException>(() => room.GetPlayer(bob.Id));
+    }
+
+    [Fact]
+    public void RemovePlayerAsHost_Throws_WhenCallerIsNotHost()
+    {
+        var room = NewRoom();
+        var alice = room.AddPlayer("Alice", isSpectator: false, avatarUrl: null);
+        var bob = room.AddPlayer("Bob", isSpectator: false, avatarUrl: null);
+        var carol = room.AddPlayer("Carol", isSpectator: false, avatarUrl: null);
+
+        Assert.Throws<UnauthorizedAccessException>(() => room.RemovePlayerAsHost(bob.Id, carol.Id));
+        Assert.Equal(3, room.GetState().Count);
+    }
+
+    [Fact]
+    public void RemovePlayerAsHost_Throws_WhenTargetNotInRoom()
+    {
+        var room = NewRoom();
+        var alice = room.AddPlayer("Alice", isSpectator: false, avatarUrl: null);
+
+        Assert.Throws<KeyNotFoundException>(() => room.RemovePlayerAsHost(alice.Id, Guid.NewGuid()));
     }
 
     [Fact]

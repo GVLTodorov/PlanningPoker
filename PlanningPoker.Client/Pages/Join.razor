@@ -1,4 +1,4 @@
-@page "/room/{RoomId}/join"
+@page "/{RoomId}/join"
 @inject RoomApiClient RoomApi
 @inject PlayerSessionState Session
 @inject NavigationManager Navigation
@@ -42,7 +42,7 @@
     protected override async Task OnInitializedAsync()
     {
         var roomTask = RoomApi.GetRoomAsync(RoomId);
-        var avatarsTask = RoomApi.GetRandomAvatarsAsync();
+        var avatarsTask = RoomApi.GetRandomAvatarsAsync(6);
 
         await Task.WhenAll(roomTask, avatarsTask);
 
@@ -53,7 +53,7 @@
     }
 
     // Enter submits natively -- this is a real <form>, no separate button-click handling needed.
-    private void JoinRoom()
+    private async Task JoinRoom()
     {
         if (string.IsNullOrWhiteSpace(_playerName))
         {
@@ -64,7 +64,8 @@
         Session.PlayerName = _playerName.Trim();
         Session.AvatarUrl = _avatarUrl;
         Session.IsSpectator = false;
+        await Session.SaveAsync();
 
-        Navigation.NavigateTo($"/room/{RoomId}");
+        Navigation.NavigateTo($"/{RoomId}");
     }
 }

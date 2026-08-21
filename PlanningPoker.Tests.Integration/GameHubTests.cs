@@ -110,6 +110,59 @@ public class GameHubTests : IClassFixture<PlanningPokerWebApplicationFactory>
     }
 
     [Fact]
+    public async Task RemovePlayer_ByHost_DisconnectsTargetAndUpdatesRoomState()
+    {
+        using var client = _factory.CreateClient();
+        var createResponse = await client.PostAsJsonAsync(
+            "/api/rooms", new CreateRoomRequest("Kick Room", DeckType.Fibonacci), JsonOptions);
+        var room = await createResponse.Content.ReadFromJsonAsync<RoomSummaryDto>(JsonOptions);
+
+        await using var aliceConnection = CreateHubConnection();
+        await using var bobConnection = CreateHubConnection();
+
+        var bobWasRemoved = false;
+        bobConnection.On("RemovedFromRoom", () => bobWasRemoved = true);
+
+        var aliceStateChanges = new List<RoomStateDto>();
+        aliceConnection.On<RoomStateDto>("RoomStateChanged", state => aliceStateChanges.Add(state));
+
+        await aliceConnection.StartAsync();
+        await bobConnection.StartAsync();
+
+        var aliceJoin = await aliceConnection.InvokeAsync<JoinRoomResult>("JoinRoom", room!.RoomId, "Alice", false, null);
+        var bobJoin = await bobConnection.InvokeAsync<JoinRoomResult>("JoinRoom", room.RoomId, "Bob", false, null);
+
+        await aliceConnection.InvokeAsync("RemovePlayer", bobJoin.PlayerId);
+
+        await WaitUntilAsync(() => bobWasRemoved);
+        await WaitUntilAsync(() => aliceStateChanges.Any(s => s.Players.Count == 1));
+        Assert.Single(aliceStateChanges.Last().Players);
+        Assert.Equal(aliceJoin.PlayerId, aliceStateChanges.Last().Players.Single().PlayerId);
+    }
+
+    [Fact]
+    public async Task RemovePlayer_ByNonHost_Throws()
+    {
+        using var client = _factory.CreateClient();
+        var createResponse = await client.PostAsJsonAsync(
+            "/api/rooms", new CreateRoomRequest("Kick Rejection Room", DeckType.Fibonacci), JsonOptions);
+        var room = await createResponse.Content.ReadFromJsonAsync<RoomSummaryDto>(JsonOptions);
+
+        await using var aliceConnection = CreateHubConnection();
+        await using var bobConnection = CreateHubConnection();
+
+        await aliceConnection.StartAsync();
+        await bobConnection.StartAsync();
+
+        var aliceJoin = await aliceConnection.InvokeAsync<JoinRoomResult>("JoinRoom", room!.RoomId, "Alice", false, null);
+        await bobConnection.InvokeAsync<JoinRoomResult>("JoinRoom", room.RoomId, "Bob", false, null);
+
+        var ex = await Assert.ThrowsAsync<HubException>(
+            () => bobConnection.InvokeAsync("RemovePlayer", aliceJoin.PlayerId));
+        Assert.Contains("host", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public async Task PickCard_Throws_WhenPlayerIsSpectator()
     {
         using var client = _factory.CreateClient();

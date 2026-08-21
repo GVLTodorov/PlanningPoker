@@ -13,5 +13,7 @@ public interface IPlayerConnectionTracker
 
     bool TryGet(string connectionId, out (RoomId RoomId, Guid PlayerId) info);
 
+    bool TryGetConnectionId(RoomId roomId, Guid playerId, out string connectionId);
+
     void Remove(string connectionId);
 }

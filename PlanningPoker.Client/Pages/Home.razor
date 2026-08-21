@@ -4,8 +4,18 @@
 @inject NavigationManager Navigation
 
 <section class="screen create-screen">
-    <h1>Planning Poker</h1>
+    <div class="page-title">
+        <a href="/" class="home-link" aria-label="Back to home">
+            <img src="favicon.svg" alt="" class="home-icon" />
+        </a>
+        <h1>Planning Poker</h1>
+    </div>
     <p class="tagline">Estimate together, in real time.</p>
+
+    @if (WasRemoved)
+    {
+        <p class="form-error" role="alert">You were removed from the room by the host.</p>
+    }
 
     <form class="stack-form" @onsubmit="CreateRoomAsync">
         <label class="field">
@@ -36,6 +46,9 @@
 </section>
 
 @code {
+    [SupplyParameterFromQuery(Name = "removed")]
+    public bool WasRemoved { get; set; }
+
     private string _roomName = string.Empty;
     private string _playerName = string.Empty;
     private string? _avatarUrl;
@@ -49,7 +62,7 @@
     {
         var nameTask = RoomApi.GetRoomNameSuggestionAsync();
         var decksTask = RoomApi.GetDecksAsync();
-        var avatarsTask = RoomApi.GetRandomAvatarsAsync();
+        var avatarsTask = RoomApi.GetRandomAvatarsAsync(6);
 
         await Task.WhenAll(nameTask, decksTask, avatarsTask);
 
@@ -73,7 +86,8 @@
         var room = await RoomApi.CreateRoomAsync(_roomName.Trim(), _deckType);
         if (room is null)
         {
-            _error = "Could not create the room. Please try again.";
+            _error = "That room name is already taken, or has no usable characters for a room link. We've suggested a different one below — try again.";
+            _roomName = await RoomApi.GetRoomNameSuggestionAsync();
             _isCreating = false;
             return;
         }
@@ -81,7 +95,8 @@
         Session.PlayerName = _playerName.Trim();
         Session.AvatarUrl = _avatarUrl;
         Session.IsSpectator = false;
+        await Session.SaveAsync();
 
-        Navigation.NavigateTo($"/room/{room.RoomId}");
+        Navigation.NavigateTo($"/{room.RoomId}");
     }
 }

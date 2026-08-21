@@ -14,7 +14,8 @@ public class RoomBenchmarks
     [GlobalSetup]
     public void Setup()
     {
-        _room = new Room(RoomId.New(), "Benchmark Room", DeckType.Fibonacci);
+        RoomId.TryParse("Benchmark Room", out var id);
+        _room = new Room(id, "Benchmark Room", DeckType.Fibonacci);
 
         for (var i = 0; i < 10; i++)
         {

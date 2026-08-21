@@ -1,5 +1,4 @@
 using PlanningPoker.Domain.Decks;
-using PlanningPoker.Domain.Errors;
 
 namespace PlanningPoker.Domain.Rooms;
 
@@ -47,6 +46,21 @@ public sealed class Room
         }
     }
 
+    /// <summary>Only the host may remove another player, enforced here, not just as a hidden button.</summary>
+    public void RemovePlayerAsHost(Guid hostPlayerId, Guid targetPlayerId)
+    {
+        lock (_lock)
+        {
+            if (!GetPlayerCore(hostPlayerId).IsHost)
+            {
+                throw new UnauthorizedAccessException("Only the room host can remove players.");
+            }
+
+            GetPlayerCore(targetPlayerId);
+            _players.Remove(targetPlayerId);
+        }
+    }
+
     public void Rename(string newName)
     {
         lock (_lock)
@@ -86,13 +100,14 @@ public sealed class Room
             {
                 if (player.IsSpectator)
                 {
-                    throw new SpectatorCannotPlayException();
+                    throw new InvalidOperationException("Spectators cannot pick a card.");
                 }
 
                 var deck = DeckCatalog.Get(DeckType);
                 if (cardIndex < 0 || cardIndex >= deck.Length)
                 {
-                    throw new InvalidCardValueException(cardIndex.Value);
+                    throw new ArgumentOutOfRangeException(
+                        nameof(cardIndex), cardIndex, "Card index is not valid for the current deck.");
                 }
             }
 
@@ -119,22 +134,28 @@ public sealed class Room
         {
             if (!GetPlayerCore(playerId).IsHost)
             {
-                throw new OnlyHostCanRevealException();
+                throw new UnauthorizedAccessException("Only the room host can reveal cards.");
             }
 
             if (!HasAllNonSpectatorsPickedCore())
             {
-                throw new RevealRequiresAllPlayersToPickException();
+                throw new InvalidOperationException("Every non-spectator player must pick a card before revealing.");
             }
 
             Status = RoundStatus.Revealed;
         }
     }
 
-    public void Reset()
+    /// <summary>Only the host may reset (see <see cref="AddPlayer"/>), enforced here, not just as a hidden button.</summary>
+    public void Reset(Guid playerId)
     {
         lock (_lock)
         {
+            if (!GetPlayerCore(playerId).IsHost)
+            {
+                throw new UnauthorizedAccessException("Only the room host can reset the round.");
+            }
+
             EndTurnCore();
         }
     }
@@ -209,7 +230,7 @@ public sealed class Room
     {
         if (!_players.TryGetValue(playerId, out var player))
         {
-            throw new PlayerNotInRoomException(playerId.ToString());
+            throw new KeyNotFoundException($"Player '{playerId}' is not in this room.");
         }
 
         return player;

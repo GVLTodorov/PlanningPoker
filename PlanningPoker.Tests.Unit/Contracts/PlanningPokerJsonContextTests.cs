@@ -74,8 +74,7 @@ public class PlanningPokerJsonContextTests
     public void RoundRevealed_RoundTrips()
     {
         var original = new RoundRevealed(
-            [new PlayerDto(Guid.NewGuid(), "Alice", false, true, null, true, new CardOptionDto(0, 0, "0"))],
-            "https://example.test/reveal.gif");
+            [new PlayerDto(Guid.NewGuid(), "Alice", false, true, null, true, new CardOptionDto(0, 0, "0"))]);
 
         var json = JsonSerializer.Serialize(original, Options);
         var roundTripped = JsonSerializer.Deserialize<RoundRevealed>(json, Options);

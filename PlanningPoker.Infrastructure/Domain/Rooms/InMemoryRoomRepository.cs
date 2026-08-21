@@ -11,11 +11,15 @@ public sealed class InMemoryRoomRepository : IRoomRepository
 {
     private readonly ConcurrentDictionary<RoomId, Room> _rooms = new();
 
-    public Room Create(string name, DeckType deckType)
+    public Room? Create(string name, DeckType deckType)
     {
-        var room = new Room(RoomId.New(), name, deckType);
-        _rooms[room.Id] = room;
-        return room;
+        if (!RoomId.TryParse(name, out var id))
+        {
+            return null;
+        }
+
+        var room = new Room(id, name, deckType);
+        return _rooms.TryAdd(id, room) ? room : null;
     }
 
     public bool TryGet(RoomId roomId, out Room? room) => _rooms.TryGetValue(roomId, out room);

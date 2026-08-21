@@ -15,6 +15,7 @@ public sealed class GameHubClient : IAsyncDisposable
     public event Action<PlayerPickStatusChanged>? PlayerPickChanged;
     public event Action<RoundRevealed>? RoundRevealed;
     public event Action? RoundReset;
+    public event Action? RemovedFromRoom;
 
     public GameHubClient(NavigationManager navigation)
     {
@@ -28,6 +29,7 @@ public sealed class GameHubClient : IAsyncDisposable
         _connection.On<PlayerPickStatusChanged>("PlayerPickStatusChanged", change => PlayerPickChanged?.Invoke(change));
         _connection.On<RoundRevealed>("RoundRevealed", revealed => RoundRevealed?.Invoke(revealed));
         _connection.On("RoundReset", () => RoundReset?.Invoke());
+        _connection.On("RemovedFromRoom", () => RemovedFromRoom?.Invoke());
     }
 
     public HubConnectionState State => _connection.State;
@@ -50,6 +52,8 @@ public sealed class GameHubClient : IAsyncDisposable
     public Task RevealAsync() => _connection.InvokeAsync("Reveal");
 
     public Task ResetAsync() => _connection.InvokeAsync("Reset");
+
+    public Task RemovePlayerAsync(Guid targetPlayerId) => _connection.InvokeAsync("RemovePlayer", targetPlayerId);
 
     public async ValueTask DisposeAsync() => await _connection.DisposeAsync();
 }

@@ -1,7 +1,16 @@
+@inject IJSRuntime JsRuntime
+
 <div class="player-card @(Player.IsSpectator ? "player-card-spectator" : "") @(IsLocalPlayer ? "player-card-local" : "")">
     @if (!string.IsNullOrEmpty(Player.AvatarUrl))
     {
         <div class="player-card-background" style="background-image:url('@Player.AvatarUrl')"></div>
+    }
+
+    @if (CanRemove)
+    {
+        <button type="button" class="player-card-remove" aria-label="Remove @Player.Name" @onclick="ConfirmAndRemoveAsync">
+            &times;
+        </button>
     }
 
     <div class="player-card-content">
@@ -32,4 +41,22 @@
 
     [Parameter]
     public bool IsLocalPlayer { get; set; }
+
+    [Parameter]
+    public bool CanRemove { get; set; }
+
+    [Parameter]
+    public EventCallback OnRemove { get; set; }
+
+    private IJSObjectReference? _jsModule;
+
+    private async Task ConfirmAndRemoveAsync()
+    {
+        _jsModule ??= await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/interop.js");
+        var confirmed = await _jsModule.InvokeAsync<bool>("confirmAction", $"Remove {Player.Name} from the room?");
+        if (confirmed)
+        {
+            await OnRemove.InvokeAsync();
+        }
+    }
 }

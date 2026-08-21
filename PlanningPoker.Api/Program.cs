@@ -36,7 +36,7 @@ builder.Services.AddSingleton<IRoomRepository, InMemoryRoomRepository>();
 builder.Services.AddSingleton<IPlayerConnectionTracker, PlayerConnectionTracker>();
 
 builder.Services
-    .AddSignalR(options => options.AddFilter<DomainExceptionHubFilter>())
+    .AddSignalR(options => options.AddFilter<GameRuleExceptionHubFilter>())
     .AddJsonProtocol(options => options.PayloadSerializerOptions = PlanningPokerJsonContext.CreateOptions());
 
 builder.Services.ConfigureHttpJsonOptions(options =>

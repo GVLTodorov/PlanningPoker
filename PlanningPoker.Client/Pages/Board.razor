@@ -1,4 +1,4 @@
-@page "/room/{RoomId}"
+@page "/{RoomId}"
 @implements IAsyncDisposable
 @inject PlayerSessionState Session
 @inject NavigationManager Navigation
@@ -13,13 +13,15 @@
     else
     {
         <header class="board-header">
-            <h1>@_state.Name</h1>
-            <div class="board-header-actions">
-                <GifPanel GifUrl="@_gifUrl" />
-                <button type="button" class="secondary-button" @onclick="CopyInviteLinkAsync">
-                    @(_linkCopied ? "Link copied!" : "Copy invite link")
-                </button>
+            <div class="page-title">
+                <a href="/" class="home-link" aria-label="Back to home">
+                    <img src="favicon.svg" alt="" class="home-icon" />
+                </a>
+                <h1>@_state.Name</h1>
             </div>
+            <button type="button" class="secondary-button" @onclick="CopyInviteLinkAsync">
+                @(_linkCopied ? "Link copied!" : "Copy invite link")
+            </button>
         </header>
 
         <div class="field">
@@ -27,13 +29,13 @@
             <p class="deck-readonly">@CurrentDeckSummary</p>
         </div>
 
-        <PlayerList Players="_state.Players" LocalPlayerId="_playerId" />
+        <PlayerList Players="_state.Players" LocalPlayerId="_playerId" IsHost="IsHost" OnRemovePlayer="RemovePlayerAsync" />
 
         <HandSelector Deck="CurrentDeck" SelectedCardIndex="_myCardIndex"
                       Disabled="@(Session.IsSpectator || _state.Status == RoundStatus.Revealed)"
                       SelectedCardIndexChanged="PickCardAsync" />
 
-        <RevealResetButton Status="_state.Status" CanReveal="CanReveal" OnReveal="RevealAsync" OnReset="ResetAsync" />
+        <RevealResetButton Status="_state.Status" CanReveal="CanReveal" IsHost="IsHost" OnReveal="RevealAsync" OnReset="ResetAsync" />
     }
 </section>
 
@@ -45,7 +47,6 @@
     private RoomStateDto? _state;
     private Guid _playerId;
     private IReadOnlyList<DeckDto> _decks = [];
-    private string? _gifUrl;
     private bool _linkCopied;
     private int? _myCardIndex;
     private IJSObjectReference? _jsModule;
@@ -68,9 +69,11 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await Session.RestoreAsync();
+
         if (string.IsNullOrWhiteSpace(Session.PlayerName))
         {
-            Navigation.NavigateTo($"/room/{RoomId}/join");
+            Navigation.NavigateTo($"/{RoomId}/join");
             return;
         }
 
@@ -81,6 +84,7 @@
         _hub.PlayerPickChanged += OnPlayerPickChanged;
         _hub.RoundRevealed += OnRoundRevealed;
         _hub.RoundReset += OnRoundReset;
+        _hub.RemovedFromRoom += OnRemovedFromRoom;
 
         await _hub.StartAsync();
         var result = await _hub.JoinRoomAsync(RoomId, Session.PlayerName, Session.IsSpectator, Session.AvatarUrl);
@@ -119,7 +123,6 @@
         }
 
         _state = _state with { Status = RoundStatus.Revealed, Players = revealed.Players.ToList() };
-        _gifUrl = revealed.GifUrl;
         InvokeAsync(StateHasChanged);
     }
 
@@ -135,9 +138,19 @@
             Status = RoundStatus.Voting,
             Players = _state.Players.Select(p => p with { HasPicked = false, Card = null }).ToList(),
         };
-        _gifUrl = null;
         _myCardIndex = null;
         InvokeAsync(StateHasChanged);
+    }
+
+    private void OnRemovedFromRoom()
+    {
+        Session.PlayerName = string.Empty;
+        Session.AvatarUrl = null;
+        InvokeAsync(async () =>
+        {
+            await Session.SaveAsync();
+            Navigation.NavigateTo("/?removed=true");
+        });
     }
 
     private async Task PickCardAsync(int? cardIndex)
@@ -153,10 +166,12 @@
 
     private Task ResetAsync() => _hub?.ResetAsync() ?? Task.CompletedTask;
 
+    private Task RemovePlayerAsync(Guid targetPlayerId) => _hub?.RemovePlayerAsync(targetPlayerId) ?? Task.CompletedTask;
+
     private async Task CopyInviteLinkAsync()
     {
         _jsModule ??= await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/interop.js");
-        var url = Navigation.ToAbsoluteUri($"/room/{RoomId}/join").ToString();
+        var url = Navigation.ToAbsoluteUri($"/{RoomId}/join").ToString();
         await _jsModule.InvokeVoidAsync("copyToClipboard", url);
         _linkCopied = true;
         StateHasChanged();
@@ -170,6 +185,7 @@
             _hub.PlayerPickChanged -= OnPlayerPickChanged;
             _hub.RoundRevealed -= OnRoundRevealed;
             _hub.RoundReset -= OnRoundReset;
+            _hub.RemovedFromRoom -= OnRemovedFromRoom;
             await _hub.DisposeAsync();
         }
 

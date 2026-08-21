@@ -1,19 +1,31 @@
 @if (Status == RoundStatus.Voting)
 {
-    <button type="button" class="primary-button reveal-button" disabled="@(!CanReveal)" @onclick="OnReveal">
-        Reveal
-    </button>
+    @if (IsHost)
+    {
+        <button type="button" class="primary-button reveal-button" disabled="@(!CanReveal)" @onclick="OnReveal">
+            Reveal
+        </button>
+    }
+    else
+    {
+        <p class="reveal-waiting">Waiting for the host to reveal…</p>
+    }
 }
-else
+else if (IsHost)
 {
     <button type="button" class="primary-button reset-button" @onclick="OnReset">
         Reset
     </button>
 }
+else
+{
+    <p class="reveal-waiting">Waiting for the host to reset…</p>
+}
 
 @code {
     private RoundStatus _lastStatus;
     private bool _lastCanReveal;
+    private bool _lastIsHost;
     private bool _firstRender = true;
 
     [Parameter]
@@ -23,19 +35,23 @@ else
     public bool CanReveal { get; set; }
 
     [Parameter]
+    public bool IsHost { get; set; }
+
+    [Parameter]
     public EventCallback OnReveal { get; set; }
 
     [Parameter]
     public EventCallback OnReset { get; set; }
 
-    // Same button occupies this spot regardless of how many other players pick a card, so it only
-    // needs to re-render when the two values that actually change its label/enabled-state change.
+    // Same spot occupies this row regardless of how many other players pick a card, so it only
+    // needs to re-render when the values that actually change its content change.
     protected override bool ShouldRender()
     {
-        var changed = _firstRender || Status != _lastStatus || CanReveal != _lastCanReveal;
+        var changed = _firstRender || Status != _lastStatus || CanReveal != _lastCanReveal || IsHost != _lastIsHost;
         _firstRender = false;
         _lastStatus = Status;
         _lastCanReveal = CanReveal;
+        _lastIsHost = IsHost;
         return changed;
     }
 }

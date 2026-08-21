@@ -13,5 +13,20 @@ public sealed class PlayerConnectionTracker : IPlayerConnectionTracker
     public bool TryGet(string connectionId, out (RoomId RoomId, Guid PlayerId) info) =>
         _connections.TryGetValue(connectionId, out info);
 
+    public bool TryGetConnectionId(RoomId roomId, Guid playerId, out string connectionId)
+    {
+        foreach (var (candidateConnectionId, info) in _connections)
+        {
+            if (info.RoomId.Equals(roomId) && info.PlayerId == playerId)
+            {
+                connectionId = candidateConnectionId;
+                return true;
+            }
+        }
+
+        connectionId = string.Empty;
+        return false;
+    }
+
     public void Remove(string connectionId) => _connections.TryRemove(connectionId, out _);
 }

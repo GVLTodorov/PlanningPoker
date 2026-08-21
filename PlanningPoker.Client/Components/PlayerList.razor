@@ -1,7 +1,9 @@
 <div class="player-list">
     @foreach (var player in Players)
     {
-        <PlayerCard @key="player.PlayerId" Player="player" IsLocalPlayer="@(player.PlayerId == LocalPlayerId)" />
+        <PlayerCard @key="player.PlayerId" Player="player" IsLocalPlayer="@(player.PlayerId == LocalPlayerId)"
+                    CanRemove="@(IsHost && player.PlayerId != LocalPlayerId)"
+                    OnRemove="@(() => OnRemovePlayer.InvokeAsync(player.PlayerId))" />
     }
 </div>
 
@@ -11,4 +13,10 @@
 
     [Parameter]
     public Guid LocalPlayerId { get; set; }
+
+    [Parameter]
+    public bool IsHost { get; set; }
+
+    [Parameter]
+    public EventCallback<Guid> OnRemovePlayer { get; set; }
 }

@@ -5,33 +5,48 @@ namespace PlanningPoker.Tests.Unit.Rooms;
 
 public class RoomIdTests
 {
-    [Fact]
-    public void New_ProducesUniqueIds()
+    [Theory]
+    [InlineData("Sprint Planning", "sprint-planning")]
+    [InlineData("  Trailing   Spaces  ", "trailing-spaces")]
+    [InlineData("clever-a3f9k2", "clever-a3f9k2")]
+    [InlineData("Café Déjà Vu!!", "caf-d-j-vu")]
+    [InlineData("UPPER_CASE", "upper-case")]
+    public void TryParse_SlugifiesName(string input, string expectedSlug)
     {
-        var a = RoomId.New();
-        var b = RoomId.New();
+        var parsed = RoomId.TryParse(input, out var roomId);
 
-        Assert.NotEqual(a, b);
+        Assert.True(parsed);
+        Assert.Equal(expectedSlug, roomId.Value);
     }
 
     [Fact]
-    public void New_RoundTripsThroughTryParse()
+    public void TryParse_IsIdempotent_SoUrlSegmentsRoundTrip()
     {
-        var original = RoomId.New();
+        RoomId.TryParse("Sprint Planning", out var fromName);
 
-        var parsed = RoomId.TryParse(original.Value, out var roomId);
+        var parsed = RoomId.TryParse(fromName.Value, out var fromUrlSegment);
 
         Assert.True(parsed);
-        Assert.Equal(original, roomId);
+        Assert.Equal(fromName, fromUrlSegment);
+    }
+
+    [Fact]
+    public void TryParse_IsCaseInsensitive()
+    {
+        RoomId.TryParse("Sprint Planning", out var lower);
+
+        var parsed = RoomId.TryParse("SPRINT PLANNING", out var upper);
+
+        Assert.True(parsed);
+        Assert.Equal(lower, upper);
     }
 
     [Theory]
     [InlineData(null)]
     [InlineData("")]
-    [InlineData("short")]
-    [InlineData("toolongforaroomid")]
-    [InlineData("O0O0O0O0")]
-    public void TryParse_RejectsInvalidInput(string? input)
+    [InlineData("   ")]
+    [InlineData("!!!")]
+    public void TryParse_RejectsInputWithNoUsableCharacters(string? input)
     {
         var parsed = RoomId.TryParse(input, out _);
 
@@ -39,13 +54,13 @@ public class RoomIdTests
     }
 
     [Fact]
-    public void TryParse_IsCaseInsensitive()
+    public void TryParse_TruncatesVeryLongNames()
     {
-        var original = RoomId.New();
+        var longName = new string('a', 200);
 
-        var parsed = RoomId.TryParse(original.Value.ToLowerInvariant(), out var roomId);
+        var parsed = RoomId.TryParse(longName, out var roomId);
 
         Assert.True(parsed);
-        Assert.Equal(original, roomId);
+        Assert.Equal(60, roomId.Value.Length);
     }
 }

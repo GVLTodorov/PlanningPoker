@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.SignalR;
-using PlanningPoker.Api.Giphy;
 using PlanningPoker.Api.Mapping;
 using PlanningPoker.Api.Realtime;
 using PlanningPoker.Contracts.Messages;
@@ -15,15 +14,18 @@ namespace PlanningPoker.Api.Hubs;
 /// </summary>
 public sealed class GameHub : Hub
 {
+    // A page refresh briefly drops the only connection to a room before the reload's JoinRoom call
+    // lands a moment later -- deleting the room the instant it empties would race a delete against
+    // that rejoin. This grace window comfortably covers a WASM cold-boot-and-reconnect cycle.
+    private static readonly TimeSpan EmptyRoomGracePeriod = TimeSpan.FromSeconds(15);
+
     private readonly IRoomRepository _rooms;
     private readonly IPlayerConnectionTracker _connections;
-    private readonly IGiphyClient _giphy;
 
-    public GameHub(IRoomRepository rooms, IPlayerConnectionTracker connections, IGiphyClient giphy)
+    public GameHub(IRoomRepository rooms, IPlayerConnectionTracker connections)
     {
         _rooms = rooms;
         _connections = connections;
-        _giphy = giphy;
     }
 
     public async Task<JoinRoomResult> JoinRoom(string roomId, string playerName, bool isSpectator, string? avatarUrl)
@@ -81,25 +83,41 @@ public sealed class GameHub : Hub
     {
         var (room, playerId) = GetTrackedRoomAndPlayer();
 
-        // Throws OnlyHostCanRevealException / RevealRequiresAllPlayersToPickException (translated
-        // to HubException by DomainExceptionHubFilter) unless the caller is host and every
+        // Throws UnauthorizedAccessException / InvalidOperationException (translated to
+        // HubException by GameRuleExceptionHubFilter) unless the caller is host and every
         // non-spectator has picked — enforced here, not just reflected as a disabled button
         // client-side.
         room.Reveal(playerId);
 
-        var gifUrls = await _giphy.GetRandomImageUrlsAsync(1);
-        var revealed = new RoundRevealed(
-            room.GetState().Select(p => p.ToContract()).ToList(),
-            gifUrls.Count > 0 ? gifUrls[0] : null);
+        var revealed = new RoundRevealed(room.GetState().Select(p => p.ToContract()).ToList());
 
         await Clients.Group(room.Id.Value).SendAsync("RoundRevealed", revealed);
     }
 
     public async Task Reset()
     {
-        var (room, _) = GetTrackedRoomAndPlayer();
-        room.Reset();
+        var (room, playerId) = GetTrackedRoomAndPlayer();
+        room.Reset(playerId);
         await Clients.Group(room.Id.Value).SendAsync("RoundReset");
+    }
+
+    public async Task RemovePlayer(Guid targetPlayerId)
+    {
+        var (room, hostPlayerId) = GetTrackedRoomAndPlayer();
+
+        // Throws UnauthorizedAccessException (translated to HubException by
+        // GameRuleExceptionHubFilter) unless the caller is host — enforced here, not just reflected
+        // as a hidden button client-side.
+        room.RemovePlayerAsHost(hostPlayerId, targetPlayerId);
+
+        if (_connections.TryGetConnectionId(room.Id, targetPlayerId, out var targetConnectionId))
+        {
+            _connections.Remove(targetConnectionId);
+            await Groups.RemoveFromGroupAsync(targetConnectionId, room.Id.Value);
+            await Clients.Client(targetConnectionId).SendAsync("RemovedFromRoom");
+        }
+
+        await Clients.Group(room.Id.Value).SendAsync("RoomStateChanged", room.ToStateDto());
     }
 
     private async Task HandleDisconnectAsync()
@@ -120,11 +138,21 @@ public sealed class GameHub : Hub
         var isNowEmpty = room.RemovePlayer(info.PlayerId);
         if (isNowEmpty)
         {
-            _rooms.Remove(info.RoomId);
+            _ = RemoveIfStillEmptyAfterDelayAsync(info.RoomId);
         }
         else
         {
             await Clients.Group(info.RoomId.Value).SendAsync("RoomStateChanged", room.ToStateDto());
+        }
+    }
+
+    private async Task RemoveIfStillEmptyAfterDelayAsync(RoomId roomId)
+    {
+        await Task.Delay(EmptyRoomGracePeriod);
+
+        if (_rooms.TryGet(roomId, out var room) && room is not null && room.IsEmpty)
+        {
+            _rooms.Remove(roomId);
         }
     }
 

@@ -8,11 +8,12 @@ namespace PlanningPoker.Tests.Component;
 public class RevealResetButtonTests : BunitContext
 {
     [Fact]
-    public void ShowsRevealButton_Disabled_WhenVotingAndNotEveryoneHasPicked()
+    public void ShowsRevealButton_Disabled_WhenHostVotingAndNotEveryoneHasPicked()
     {
         var cut = Render<RevealResetButton>(p => p
             .Add(x => x.Status, RoundStatus.Voting)
-            .Add(x => x.CanReveal, false));
+            .Add(x => x.CanReveal, false)
+            .Add(x => x.IsHost, true));
 
         var button = cut.Find("button");
 
@@ -21,11 +22,12 @@ public class RevealResetButtonTests : BunitContext
     }
 
     [Fact]
-    public void ShowsRevealButton_Enabled_WhenVotingAndEveryoneHasPicked()
+    public void ShowsRevealButton_Enabled_WhenHostVotingAndEveryoneHasPicked()
     {
         var cut = Render<RevealResetButton>(p => p
             .Add(x => x.Status, RoundStatus.Voting)
-            .Add(x => x.CanReveal, true));
+            .Add(x => x.CanReveal, true)
+            .Add(x => x.IsHost, true));
 
         var button = cut.Find("button");
 
@@ -34,16 +36,41 @@ public class RevealResetButtonTests : BunitContext
     }
 
     [Fact]
-    public void ShowsResetButton_WhenRevealed()
+    public void ShowsWaitingMessage_NotButton_WhenNotHostAndVoting()
+    {
+        var cut = Render<RevealResetButton>(p => p
+            .Add(x => x.Status, RoundStatus.Voting)
+            .Add(x => x.CanReveal, false)
+            .Add(x => x.IsHost, false));
+
+        Assert.Empty(cut.FindAll("button"));
+        Assert.Contains("Waiting for the host", cut.Markup);
+    }
+
+    [Fact]
+    public void ShowsResetButton_WhenHostAndRevealed()
     {
         var cut = Render<RevealResetButton>(p => p
             .Add(x => x.Status, RoundStatus.Revealed)
-            .Add(x => x.CanReveal, false));
+            .Add(x => x.CanReveal, false)
+            .Add(x => x.IsHost, true));
 
         var button = cut.Find("button");
 
         Assert.Equal("Reset", button.TextContent.Trim());
         Assert.False(button.HasAttribute("disabled"));
+    }
+
+    [Fact]
+    public void ShowsWaitingMessage_NotButton_WhenNotHostAndRevealed()
+    {
+        var cut = Render<RevealResetButton>(p => p
+            .Add(x => x.Status, RoundStatus.Revealed)
+            .Add(x => x.CanReveal, false)
+            .Add(x => x.IsHost, false));
+
+        Assert.Empty(cut.FindAll("button"));
+        Assert.Contains("Waiting for the host", cut.Markup);
     }
 
     [Fact]
@@ -53,6 +80,7 @@ public class RevealResetButtonTests : BunitContext
         var cut = Render<RevealResetButton>(p => p
             .Add(x => x.Status, RoundStatus.Voting)
             .Add(x => x.CanReveal, true)
+            .Add(x => x.IsHost, true)
             .Add(x => x.OnReveal, () => revealed = true));
 
         cut.Find("button").Click();
@@ -66,6 +94,7 @@ public class RevealResetButtonTests : BunitContext
         var wasReset = false;
         var cut = Render<RevealResetButton>(p => p
             .Add(x => x.Status, RoundStatus.Revealed)
+            .Add(x => x.IsHost, true)
             .Add(x => x.OnReset, () => wasReset = true));
 
         cut.Find("button").Click();

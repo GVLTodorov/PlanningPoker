@@ -1,41 +1,69 @@
 namespace PlanningPoker.Domain.Rooms;
 
-/// <summary>Short, URL-safe room identifier. Distinct from the room's (editable) display name.</summary>
+/// <summary>
+/// URL-safe room identifier, derived from the room's display name (e.g. "Sprint Planning" -&gt;
+/// "sprint-planning") so shared room links read as <c>/sprint-planning</c> instead of an opaque code.
+/// <see cref="TryParse"/> is used both to derive a new room's id from its name at creation time and
+/// to normalize an id coming back in from a URL segment — slugifying an already-slugified value is a
+/// no-op, so both paths produce the same key.
+/// </summary>
 public readonly record struct RoomId
 {
-    // Excludes visually ambiguous characters: 0/O, 1/I/L.
-    private const string Alphabet = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
-    private const int Length = 8;
+    private const int MaxLength = 60;
 
     public string Value { get; }
 
     private RoomId(string value) => Value = value;
 
-    public static RoomId New()
+    public static bool TryParse(string? input, out RoomId roomId)
     {
-        Span<char> buffer = stackalloc char[Length];
-        for (var i = 0; i < Length; i++)
+        if (string.IsNullOrWhiteSpace(input))
         {
-            buffer[i] = Alphabet[Random.Shared.Next(Alphabet.Length)];
+            roomId = default;
+            return false;
         }
 
-        return new RoomId(new string(buffer));
-    }
+        Span<char> buffer = stackalloc char[Math.Min(input.Length, MaxLength)];
+        var length = 0;
+        var lastWasHyphen = false;
 
-    public static bool TryParse(string? value, out RoomId roomId)
-    {
-        if (!string.IsNullOrWhiteSpace(value) && value.Length == Length)
+        foreach (var ch in input)
         {
-            var upper = value.ToUpperInvariant();
-            if (upper.All(c => Alphabet.Contains(c)))
+            if (length >= buffer.Length)
             {
-                roomId = new RoomId(upper);
-                return true;
+                break;
+            }
+
+            if (ch is >= 'a' and <= 'z' or >= '0' and <= '9')
+            {
+                buffer[length++] = ch;
+                lastWasHyphen = false;
+            }
+            else if (ch is >= 'A' and <= 'Z')
+            {
+                buffer[length++] = char.ToLowerInvariant(ch);
+                lastWasHyphen = false;
+            }
+            else if (!lastWasHyphen && length > 0)
+            {
+                buffer[length++] = '-';
+                lastWasHyphen = true;
             }
         }
 
-        roomId = default;
-        return false;
+        if (lastWasHyphen)
+        {
+            length--;
+        }
+
+        if (length == 0)
+        {
+            roomId = default;
+            return false;
+        }
+
+        roomId = new RoomId(new string(buffer[..length]));
+        return true;
     }
 
     public override string ToString() => Value;

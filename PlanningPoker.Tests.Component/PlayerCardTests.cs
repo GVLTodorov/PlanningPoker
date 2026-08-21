@@ -64,4 +64,50 @@ public class PlayerCardTests : BunitContext
 
         Assert.Equal("Spectator", cut.Find(".player-card-badge").TextContent);
     }
+
+    [Fact]
+    public void OmitsRemoveButton_WhenCanRemoveIsFalse()
+    {
+        var player = new PlayerDto(Guid.NewGuid(), "Alice", false, false, null, false, null);
+
+        var cut = Render<PlayerCard>(p => p
+            .Add(x => x.Player, player)
+            .Add(x => x.CanRemove, false));
+
+        Assert.Empty(cut.FindAll(".player-card-remove"));
+    }
+
+    [Fact]
+    public void ClickingRemove_InvokesOnRemove_WhenConfirmed()
+    {
+        JSInterop.SetupModule("./js/interop.js").Setup<bool>("confirmAction", _ => true).SetResult(true);
+        var player = new PlayerDto(Guid.NewGuid(), "Alice", false, false, null, false, null);
+        var removed = false;
+
+        var cut = Render<PlayerCard>(p => p
+            .Add(x => x.Player, player)
+            .Add(x => x.CanRemove, true)
+            .Add(x => x.OnRemove, () => removed = true));
+
+        cut.Find(".player-card-remove").Click();
+
+        Assert.True(removed);
+    }
+
+    [Fact]
+    public void ClickingRemove_DoesNotInvokeOnRemove_WhenNotConfirmed()
+    {
+        JSInterop.SetupModule("./js/interop.js").Setup<bool>("confirmAction", _ => true).SetResult(false);
+        var player = new PlayerDto(Guid.NewGuid(), "Alice", false, false, null, false, null);
+        var removed = false;
+
+        var cut = Render<PlayerCard>(p => p
+            .Add(x => x.Player, player)
+            .Add(x => x.CanRemove, true)
+            .Add(x => x.OnRemove, () => removed = true));
+
+        cut.Find(".player-card-remove").Click();
+
+        Assert.False(removed);
+    }
 }

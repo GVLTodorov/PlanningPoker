@@ -24,6 +24,12 @@ public static class RoomEndpoints
             }
 
             var room = rooms.Create(request.Name.Trim(), request.DeckType.ToDomain());
+            if (room is null)
+            {
+                return Results.Conflict(
+                    "That room name is already taken or has no usable characters for a room link. Try a different name.");
+            }
+
             return Results.Created($"/api/rooms/{room.Id.Value}", room.ToSummaryDto());
         });
 

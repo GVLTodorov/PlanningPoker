@@ -85,13 +85,18 @@ planningpoker:
 
 1. On load, the **room name** field is auto-populated with a friendly
    generated value: `<random word>-<short id>` (e.g. `clever-a3f9k2`), so the
-   user doesn't have to think one up but can still edit it.
+   user doesn't have to think one up but can still edit it. The room's URL is
+   a slug derived from this name (e.g. `/clever-a3f9k2`, or `/sprint-planning`
+   for a custom name with spaces) rather than an opaque generated id. If the
+   resulting slug is already taken by another active room, room creation
+   fails with an error asking for a different name.
 2. Keyboard focus starts on the **your name** field (the thing the user
    actually needs to type).
-3. Show **3 random avatar images fetched from Giphy** for the user to pick
-   from as their player avatar. The **first avatar is selected by default**,
-   and the currently selected avatar shows a **green highlight border**
-   around it so the user can tell which one is picked.
+3. Show **6 random avatar images fetched from Giphy**, rendered as rounded
+   square tiles (not circles), for the user to pick from as their player
+   avatar. The **first avatar is selected by default**, and the currently
+   selected avatar shows a **green highlight border** around it so the user
+   can tell which one is picked.
 4. **Deck picker** is a dropdown; each option shows the deck's short label
    plus its actual values in brackets, e.g.:
    - `Fibonacci (0, 1, 2, 3, 5, 8, 13, 21, ...)`
@@ -112,9 +117,9 @@ planningpoker:
 ### 5.2 Workflow B — Joining via a shared link
 
 1. A second user opens the shared room URL.
-2. Show **3 random avatar images from Giphy** to pick from, same as the
-   create flow (first avatar selected by default, selected avatar shows a
-   green highlight border).
+2. Show **6 random avatar images from Giphy** to pick from, same as the
+   create flow (rounded square tiles, first avatar selected by default,
+   selected avatar shows a green highlight border).
 3. **No Host checkbox is shown** — a player who joins via link is never the
    host (see [Section 5.3](#53-host--room-ownership)).
 4. Keyboard focus starts on the **your name** textbox.
@@ -125,13 +130,21 @@ planningpoker:
 - The player who **creates** the room is its **host** (enforced server-side
   as "first player to join the room," which the creator always is — not a
   client-supplied flag, so it can't be spoofed by a later joiner).
-- **Only the host can reveal cards.** The Reveal button is disabled for
-  everyone else even once all non-spectator players have picked; attempting
-  to reveal as a non-host is also rejected server-side.
+- **Only the host can reveal or reset a round.** Non-host players see no
+  Reveal/Reset button at all — just a "Waiting for the host to reveal/reset…"
+  message — and attempting either as a non-host is also rejected
+  server-side, not merely hidden client-side.
 - A room's **deck is fixed at creation time and cannot be changed** once
   inside the room — the deck picker on the create screen is the only place
   it can be set. The board screen shows the deck name and values as
   read-only text, not a dropdown.
+- **The host can remove other players from the room.** Each player card
+  shows a small **X button in its top-right corner**, visible only to the
+  host and only on other players' cards (never on the host's own card).
+  Clicking it asks for **confirmation** before removing that player.
+  Removal is enforced server-side (not just hidden client-side for
+  non-hosts), and the removed player is disconnected and returned to the
+  home screen with a notice that they were removed.
 
 ### 5.4 Voting round lifecycle
 
@@ -141,14 +154,10 @@ planningpoker:
    **every non-spectator player has picked a card**.
 3. On reveal:
    - All hands become visible.
-   - The **Reveal** button is replaced by a **Reset** button in the same
-     spot.
-   - A **random Giphy gif** appears as a small thumbnail card in the header,
-     to the left of the Copy invite link button (see
-     [Section 8](#8-giphy-integration)).
-4. Clicking **Reset**:
+   - The **Reveal** button is replaced by a **Reset** button, visible only to
+     the host, in the same spot.
+4. Clicking **Reset** (host only):
    - Clears all picks and starts a new round.
-   - Clears the gif panel.
    - The button reverts back to **Reveal** (disabled until everyone has
      picked again).
 
@@ -168,12 +177,10 @@ planningpoker:
 - Configured via `GIPHY_API_BASE_URL` and `GIPHY_API_QUERY` env vars (see
   [Section 4](#4-deployment)); the app must run fine with no visible Giphy
   features when unset.
-- Used in two places:
-  1. **Avatar picker** — 3 random avatars on both the create-room screen
-     ([5.1](#51-workflow-a--home-screen-create-a-room)) and the join screen
-     ([5.2](#52-workflow-b--joining-via-a-shared-link)).
-  2. **Reveal gif** — one random gif shown alongside the revealed hands
-     ([5.4](#54-voting-round-lifecycle)), cleared on reset.
+- Used in one place: the **avatar picker** — 6 random avatars on both the
+  create-room screen ([5.1](#51-workflow-a--home-screen-create-a-room)) and
+  the join screen ([5.2](#52-workflow-b--joining-via-a-shared-link)). There is
+  no reveal-gif feature — the round-reveal step is Giphy-free.
 
 ## 7. Visual Design
 
@@ -224,8 +231,8 @@ measure them with real benchmarks/load tests.
 - `System.Text.Json` source-generated (de)serializers instead of reflection
   for the WebSocket/SignalR message envelope — this is the hottest path in
   the app (every pick/reveal fans out to every connected player).
-- Short-lived `IMemoryCache` for Giphy responses so a burst of reveals/joins
-  doesn't hammer the Giphy API or its rate limit.
+- Short-lived `IMemoryCache` for Giphy responses so a burst of joins (avatar
+  picker) doesn't hammer the Giphy API or its rate limit.
 - Broadcast only the state diff a client needs, not the full room payload,
   where practical.
 - Response compression (Brotli/Gzip) enabled for the static Blazor WASM
