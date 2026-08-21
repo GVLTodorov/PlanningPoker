@@ -2,8 +2,7 @@
   <Project Path="PlanningPoker.Api/PlanningPoker.Api.csproj" />
   <Project Path="PlanningPoker.Benchmarks/PlanningPoker.Benchmarks.csproj" />
   <Project Path="PlanningPoker.Client/PlanningPoker.Client.csproj" />
-  <Project Path="PlanningPoker.Contracts/PlanningPoker.Contracts.csproj" />
-  <Project Path="PlanningPoker.Domain/PlanningPoker.Domain.csproj" />
+  <Project Path="PlanningPoker.Infrastructure/PlanningPoker.Infrastructure.csproj" />
   <Project Path="PlanningPoker.LoadTest/PlanningPoker.LoadTest.csproj" />
   <Project Path="PlanningPoker.Tests.Component/PlanningPoker.Tests.Component.csproj" />
   <Project Path="PlanningPoker.Tests.Integration/PlanningPoker.Tests.Integration.csproj" />

@@ -1,8 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\PlanningPoker.Domain\PlanningPoker.Domain.csproj" />
-    <ProjectReference Include="..\PlanningPoker.Contracts\PlanningPoker.Contracts.csproj" />
+    <ProjectReference Include="..\PlanningPoker.Infrastructure\PlanningPoker.Infrastructure.csproj" />
     <ProjectReference Include="..\PlanningPoker.Api\PlanningPoker.Api.csproj" />
   </ItemGroup>
 

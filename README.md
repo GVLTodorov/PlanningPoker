@@ -85,8 +85,8 @@ The solution ([PlanningPoker.slnx](PlanningPoker.slnx)) and every project sit at
 no extra `src/` layer — one folder per project, split along dependency lines:
 
 ```
-PlanningPoker.Domain/           Business rules only: Room/Player/Deck, no ASP.NET dependency
-PlanningPoker.Contracts/        Wire DTOs + the JSON source-gen context, shared by Api and Client
+PlanningPoker.Infrastructure/   Domain rules (Room/Player/Deck, no ASP.NET dependency) + wire DTOs
+                                 and the JSON source-gen context, shared by Api and Client
 PlanningPoker.Api/              Minimal API + SignalR hub + Giphy client; hosts the Client's output
 PlanningPoker.Client/           Blazor WebAssembly frontend
 PlanningPoker.Tests.Unit/       xUnit: domain logic, deck values, Giphy client, JSON round-trips

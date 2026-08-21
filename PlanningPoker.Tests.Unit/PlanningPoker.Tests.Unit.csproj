@@ -19,8 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\PlanningPoker.Domain\PlanningPoker.Domain.csproj" />
-    <ProjectReference Include="..\PlanningPoker.Contracts\PlanningPoker.Contracts.csproj" />
+    <ProjectReference Include="..\PlanningPoker.Infrastructure\PlanningPoker.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

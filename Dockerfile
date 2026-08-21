@@ -5,14 +5,12 @@ WORKDIR /src
 
 # Restore first, from just the project files, so editing source later doesn't invalidate this layer.
 COPY global.json Directory.Build.props ./
-COPY PlanningPoker.Domain/PlanningPoker.Domain.csproj PlanningPoker.Domain/
-COPY PlanningPoker.Contracts/PlanningPoker.Contracts.csproj PlanningPoker.Contracts/
+COPY PlanningPoker.Infrastructure/PlanningPoker.Infrastructure.csproj PlanningPoker.Infrastructure/
 COPY PlanningPoker.Client/PlanningPoker.Client.csproj PlanningPoker.Client/
 COPY PlanningPoker.Api/PlanningPoker.Api.csproj PlanningPoker.Api/
 RUN dotnet restore PlanningPoker.Api/PlanningPoker.Api.csproj
 
-COPY PlanningPoker.Domain/ PlanningPoker.Domain/
-COPY PlanningPoker.Contracts/ PlanningPoker.Contracts/
+COPY PlanningPoker.Infrastructure/ PlanningPoker.Infrastructure/
 COPY PlanningPoker.Client/ PlanningPoker.Client/
 COPY PlanningPoker.Api/ PlanningPoker.Api/
 
