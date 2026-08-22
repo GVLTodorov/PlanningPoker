@@ -24,6 +24,14 @@ jobs:
       - name: Build
         run: dotnet build PlanningPoker.slnx -c Release
 
+      # `dotnet build`'s output only serves static files (index.html, the Blazor framework files,
+      # css/js) via a manifest pointing back to source-tree intermediate paths -- fine for
+      # `dotnet run`, but running that DLL directly (as this job does) 404s on every static asset.
+      # `dotnet publish` bundles a real, portable wwwroot, same as the Dockerfile already does for
+      # the production image.
+      - name: Publish the app
+        run: dotnet publish src/PlanningPoker.Api/PlanningPoker.Api.csproj -c Release -o publish/api
+
       - name: Install Playwright's Chromium
         run: pwsh src/PlanningPoker.Tests.Play/bin/Release/net10.0/playwright.ps1 install --with-deps chromium
 
@@ -33,7 +41,7 @@ jobs:
           GIPHY_API_BASE_URL: ${{ secrets.GIPHY_API_BASE_URL }}
           GIPHY_API_QUERY: ${{ secrets.GIPHY_API_QUERY }}
         run: |
-          dotnet src/PlanningPoker.Api/bin/Release/net10.0/PlanningPoker.Api.dll > api.log 2>&1 &
+          dotnet publish/api/PlanningPoker.Api.dll > api.log 2>&1 &
           echo $! > api.pid
           timeout 30 bash -c 'until curl -sf http://localhost:5232/healthz >/dev/null; do sleep 1; done'
 
@@ -45,6 +53,10 @@ jobs:
             http://localhost:5232 artifacts/demo-video | tee artifacts/demo-video.log
           video_path=$(grep -oP '(?<=^VIDEO_PATH=).+' artifacts/demo-video.log)
           echo "webm_path=$video_path" >> "$GITHUB_OUTPUT"
+
+      - name: Show app server log
+        if: always()
+        run: cat api.log || true
 
       - name: Stop the app
         if: always()

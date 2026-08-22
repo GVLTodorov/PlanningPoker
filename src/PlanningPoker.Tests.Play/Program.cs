@@ -61,11 +61,33 @@ for (var i = 0; i < playerNames.Length - 1; i++)
     guestContexts.Add(guestContext);
 }
 
-var host = new DemoPlayer(await hostContext.NewPageAsync());
+var hostPageRaw = await hostContext.NewPageAsync();
+LogDiagnostics(hostPageRaw, "host");
+var host = new DemoPlayer(hostPageRaw);
+
 var guests = new List<DemoPlayer>();
 foreach (var context in guestContexts)
 {
-    guests.Add(new DemoPlayer(await context.NewPageAsync()));
+    var guestPageRaw = await context.NewPageAsync();
+    LogDiagnostics(guestPageRaw, $"guest{guests.Count + 1}");
+    guests.Add(new DemoPlayer(guestPageRaw));
+}
+
+// Surfaces browser-side failures (a JS error, a failed WASM/framework download, etc.) directly in
+// the CI log -- without this, a broken page just looks like a plain Playwright wait timeout with
+// no clue why.
+static void LogDiagnostics(IPage page, string label)
+{
+    page.Console += (_, msg) => Console.WriteLine($"[{label} console/{msg.Type}] {msg.Text}");
+    page.PageError += (_, error) => Console.WriteLine($"[{label} page error] {error}");
+    page.RequestFailed += (_, request) => Console.WriteLine($"[{label} request failed] {request.Url}: {request.Failure}");
+    page.Response += (_, response) =>
+    {
+        if (response.Status >= 400)
+        {
+            Console.WriteLine($"[{label} response {response.Status}] {response.Url}");
+        }
+    };
 }
 
 var players = new List<DemoPlayer> { host };
