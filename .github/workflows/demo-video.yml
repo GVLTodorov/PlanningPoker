@@ -41,7 +41,12 @@ jobs:
           GIPHY_API_BASE_URL: ${{ secrets.GIPHY_API_BASE_URL }}
           GIPHY_API_QUERY: ${{ secrets.GIPHY_API_QUERY }}
         run: |
-          dotnet publish/api/PlanningPoker.Api.dll > api.log 2>&1 &
+          # ContentRootPath defaults to the process's working directory (the repo root here), not
+          # the published DLL's own folder, so WebRootPath resolves to <repo root>/wwwroot (doesn't
+          # exist) unless --contentRoot is given explicitly. It must be absolute: a relative value
+          # gets resolved against the DLL's base directory, not this shell's cwd, and silently
+          # doubles the path (confirmed locally: publish/api/publish/api).
+          dotnet publish/api/PlanningPoker.Api.dll --contentRoot "$GITHUB_WORKSPACE/publish/api" > api.log 2>&1 &
           echo $! > api.pid
           timeout 30 bash -c 'until curl -sf http://localhost:5232/healthz >/dev/null; do sleep 1; done'
 
