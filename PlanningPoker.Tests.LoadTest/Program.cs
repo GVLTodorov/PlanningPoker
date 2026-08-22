@@ -3,7 +3,7 @@
 // hottest path in the app (every pick fans out to every connected player). Not gated in CI
 // (REQUIREMENTS.MD Section 10.3 explicitly allows that); run manually against a live instance:
 //
-//   dotnet run --project PlanningPoker.LoadTest -c Release -- http://localhost:5232 20 5 10
+//   dotnet run --project PlanningPoker.Tests.LoadTest -c Release -- http://localhost:5232 20 5 10
 
 using System.Collections.Concurrent;
 using System.Diagnostics;

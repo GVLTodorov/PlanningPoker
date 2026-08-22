@@ -92,8 +92,8 @@ PlanningPoker.Client/           Blazor WebAssembly frontend
 PlanningPoker.Tests.Unit/       xUnit: domain logic, deck values, Giphy client, JSON round-trips
 PlanningPoker.Tests.Component/  bUnit: Blazor component behavior
 PlanningPoker.Tests.Integration/  WebApplicationFactory + a real SignalR client, full hub flow
-PlanningPoker.Benchmarks/       BenchmarkDotNet: domain hot paths, JSON serialization, Giphy cache
-PlanningPoker.LoadTest/         Console tool: N rooms x M players, reports pick/reveal latency
+PlanningPoker.Tests.Benchmarks/ BenchmarkDotNet: domain hot paths, JSON serialization, Giphy cache
+PlanningPoker.Tests.LoadTest/   Console tool: N rooms x M players, reports pick/reveal latency
 ```
 
 The Client depends only on Contracts — never Domain — so the browser bundle never ships
@@ -108,7 +108,7 @@ dotnet test PlanningPoker.slnx
 
 Runs the unit, component, and integration suites together. The [CI workflow](.github/workflows/ci.yml)
 runs the same command on every push/PR and gates the version-bump/image-build/push job on it
-passing. Performance checks (`PlanningPoker.Benchmarks`, `PlanningPoker.LoadTest`, and the bundle
+passing. Performance checks (`PlanningPoker.Tests.Benchmarks`, `PlanningPoker.Tests.LoadTest`, and the bundle
 size check in CI) are run separately and don't gate every commit — see REQUIREMENTS.MD Section 10.3.
 
 ## Configuration

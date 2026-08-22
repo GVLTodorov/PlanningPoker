@@ -3,7 +3,7 @@ using BenchmarkDotNet.Attributes;
 using PlanningPoker.Contracts;
 using PlanningPoker.Contracts.Serialization;
 
-namespace PlanningPoker.Benchmarks;
+namespace PlanningPoker.Tests.Benchmarks;
 
 /// <summary>
 /// Justifies the source-gen JSON context (REQUIREMENTS.MD Section 10.1): the hub message envelope

@@ -3,7 +3,7 @@ using BenchmarkDotNet.Attributes;
 using Microsoft.Extensions.Caching.Memory;
 using PlanningPoker.Api.Giphy;
 
-namespace PlanningPoker.Benchmarks;
+namespace PlanningPoker.Tests.Benchmarks;
 
 /// <summary>Justifies the <see cref="IMemoryCache"/> layer in front of the Giphy HTTP call.</summary>
 [MemoryDiagnoser]

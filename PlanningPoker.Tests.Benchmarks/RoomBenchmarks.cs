@@ -2,7 +2,7 @@ using BenchmarkDotNet.Attributes;
 using PlanningPoker.Domain.Decks;
 using PlanningPoker.Domain.Rooms;
 
-namespace PlanningPoker.Benchmarks;
+namespace PlanningPoker.Tests.Benchmarks;
 
 /// <summary>Hot-path domain operations: every pick and every reveal fans out to every connected player.</summary>
 [MemoryDiagnoser]

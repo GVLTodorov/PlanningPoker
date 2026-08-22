@@ -53,6 +53,42 @@ jobs:
         shell: pwsh
         run: ./scripts/check-bundle-size.ps1
 
+  # Micro-benchmarks for domain hot paths, JSON serialization, and the Giphy cache
+  # (REQUIREMENTS.MD Section 10.3). `--job short` trades precision for a runtime that fits a shared
+  # CI runner; same non-gating treatment as bundle-size -- these track trends, they don't block a
+  # commit over CI-runner noise.
+  benchmarks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Run benchmarks
+        working-directory: PlanningPoker.Tests.Benchmarks
+        run: dotnet run -c Release -- --filter '*' --job short
+
+      - name: Add report to job summary
+        if: always()
+        working-directory: PlanningPoker.Tests.Benchmarks
+        run: |
+          for f in BenchmarkDotNet.Artifacts/results/*-report-github.md; do
+            echo "### $(basename "$f" -report-github.md)" >> "$GITHUB_STEP_SUMMARY"
+            cat "$f" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+          done
+
+      - name: Upload benchmark artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: PlanningPoker.Tests.Benchmarks/BenchmarkDotNet.Artifacts/
+
   # Gated on `test` -- the deliberate delta from the GVLTodorov/Resume pattern this workflow is
   # otherwise modeled on, which bumps/builds/pushes on every push with no test gate.
   release:
