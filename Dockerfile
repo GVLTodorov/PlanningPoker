@@ -5,18 +5,18 @@ WORKDIR /src
 
 # Restore first, from just the project files, so editing source later doesn't invalidate this layer.
 COPY global.json Directory.Build.props ./
-COPY PlanningPoker.Infrastructure/PlanningPoker.Infrastructure.csproj PlanningPoker.Infrastructure/
-COPY PlanningPoker.Client/PlanningPoker.Client.csproj PlanningPoker.Client/
-COPY PlanningPoker.Api/PlanningPoker.Api.csproj PlanningPoker.Api/
-RUN dotnet restore PlanningPoker.Api/PlanningPoker.Api.csproj
+COPY src/PlanningPoker.Infrastructure/PlanningPoker.Infrastructure.csproj src/PlanningPoker.Infrastructure/
+COPY src/PlanningPoker.Client/PlanningPoker.Client.csproj src/PlanningPoker.Client/
+COPY src/PlanningPoker.Api/PlanningPoker.Api.csproj src/PlanningPoker.Api/
+RUN dotnet restore src/PlanningPoker.Api/PlanningPoker.Api.csproj
 
-COPY PlanningPoker.Infrastructure/ PlanningPoker.Infrastructure/
-COPY PlanningPoker.Client/ PlanningPoker.Client/
-COPY PlanningPoker.Api/ PlanningPoker.Api/
+COPY src/PlanningPoker.Infrastructure/ src/PlanningPoker.Infrastructure/
+COPY src/PlanningPoker.Client/ src/PlanningPoker.Client/
+COPY src/PlanningPoker.Api/ src/PlanningPoker.Api/
 
 # Publishing the Api project transitively publishes the Blazor Client's static assets into its
 # output (the Api -> Client ProjectReference), so there is no separate Client publish step.
-RUN dotnet publish PlanningPoker.Api/PlanningPoker.Api.csproj -c Release -o /app/publish --no-restore
+RUN dotnet publish src/PlanningPoker.Api/PlanningPoker.Api.csproj -c Release -o /app/publish --no-restore
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app

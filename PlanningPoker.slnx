@@ -1,10 +1,10 @@
 <Solution>
-  <Project Path="PlanningPoker.Api/PlanningPoker.Api.csproj" />
-  <Project Path="PlanningPoker.Client/PlanningPoker.Client.csproj" />
-  <Project Path="PlanningPoker.Infrastructure/PlanningPoker.Infrastructure.csproj" />
-  <Project Path="PlanningPoker.Tests.Benchmarks/PlanningPoker.Tests.Benchmarks.csproj" />
-  <Project Path="PlanningPoker.Tests.Component/PlanningPoker.Tests.Component.csproj" />
-  <Project Path="PlanningPoker.Tests.Integration/PlanningPoker.Tests.Integration.csproj" />
-  <Project Path="PlanningPoker.Tests.LoadTest/PlanningPoker.Tests.LoadTest.csproj" />
-  <Project Path="PlanningPoker.Tests.Unit/PlanningPoker.Tests.Unit.csproj" />
+  <Project Path="src/PlanningPoker.Api/PlanningPoker.Api.csproj" />
+  <Project Path="src/PlanningPoker.Client/PlanningPoker.Client.csproj" />
+  <Project Path="src/PlanningPoker.Infrastructure/PlanningPoker.Infrastructure.csproj" />
+  <Project Path="src/PlanningPoker.Tests.Benchmarks/PlanningPoker.Tests.Benchmarks.csproj" />
+  <Project Path="src/PlanningPoker.Tests.Component/PlanningPoker.Tests.Component.csproj" />
+  <Project Path="src/PlanningPoker.Tests.Integration/PlanningPoker.Tests.Integration.csproj" />
+  <Project Path="src/PlanningPoker.Tests.LoadTest/PlanningPoker.Tests.LoadTest.csproj" />
+  <Project Path="src/PlanningPoker.Tests.Unit/PlanningPoker.Tests.Unit.csproj" />
 </Solution>

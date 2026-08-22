@@ -81,19 +81,21 @@ metadata, and the Giphy avatar proxy.
 
 ## Project structure
 
-The solution ([PlanningPoker.slnx](PlanningPoker.slnx)) and every project sit at the repo root —
-no extra `src/` layer — one folder per project, split along dependency lines:
+The solution ([PlanningPoker.slnx](PlanningPoker.slnx)) sits at the repo root; every project lives
+under `src/`, one folder per project, split along dependency lines:
 
 ```
-PlanningPoker.Infrastructure/   Domain rules (Room/Player/Deck, no ASP.NET dependency) + wire DTOs
-                                 and the JSON source-gen context, shared by Api and Client
-PlanningPoker.Api/              Minimal API + SignalR hub + Giphy client; hosts the Client's output
-PlanningPoker.Client/           Blazor WebAssembly frontend
-PlanningPoker.Tests.Unit/       xUnit: domain logic, deck values, Giphy client, JSON round-trips
-PlanningPoker.Tests.Component/  bUnit: Blazor component behavior
-PlanningPoker.Tests.Integration/  WebApplicationFactory + a real SignalR client, full hub flow
-PlanningPoker.Tests.Benchmarks/ BenchmarkDotNet: domain hot paths, JSON serialization, Giphy cache
-PlanningPoker.Tests.LoadTest/   Console tool: N rooms x M players, reports pick/reveal latency
+src/PlanningPoker.Infrastructure/     Domain rules (Room/Player/Deck, no ASP.NET dependency) + wire
+                                       DTOs and the JSON source-gen context, shared by Api and Client
+src/PlanningPoker.Api/                Minimal API + SignalR hub + Giphy client; hosts the Client's
+                                       output
+src/PlanningPoker.Client/             Blazor WebAssembly frontend
+src/PlanningPoker.Tests.Unit/         xUnit: domain logic, deck values, Giphy client, JSON round-trips
+src/PlanningPoker.Tests.Component/    bUnit: Blazor component behavior
+src/PlanningPoker.Tests.Integration/  WebApplicationFactory + a real SignalR client, full hub flow
+src/PlanningPoker.Tests.Benchmarks/   BenchmarkDotNet: domain hot paths, JSON serialization, Giphy
+                                       cache
+src/PlanningPoker.Tests.LoadTest/     Console tool: N rooms x M players, reports pick/reveal latency
 ```
 
 The Client depends only on Contracts — never Domain — so the browser bundle never ships

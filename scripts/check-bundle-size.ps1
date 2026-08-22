@@ -17,7 +17,7 @@ if (Test-Path $publishDir) {
     Remove-Item -Recurse -Force $publishDir
 }
 
-dotnet publish (Join-Path $repoRoot "PlanningPoker.Client/PlanningPoker.Client.csproj") -c Release -o $publishDir
+dotnet publish (Join-Path $repoRoot "src/PlanningPoker.Client/PlanningPoker.Client.csproj") -c Release -o $publishDir
 if ($LASTEXITCODE -ne 0) {
     throw "dotnet publish failed."
 }

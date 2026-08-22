@@ -8,6 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\PlanningPoker.Client\PlanningPoker.Client.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="bunit" Version="2.9.0" />
     <PackageReference Include="coverlet.collector" Version="6.0.4" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
@@ -17,10 +21,6 @@
 
   <ItemGroup>
     <Using Include="Xunit" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\PlanningPoker.Client\PlanningPoker.Client.csproj" />
   </ItemGroup>
 
 </Project>

@@ -21,9 +21,9 @@ container image. One language (C#) end-to-end, no separate JS/npm toolchain —
 the API serves the Blazor WASM build as static files and exposes real-time
 game state over SignalR or raw WebSockets.
 
-- The solution (`.sln`) and project (`.csproj`) files must live at the root
-  level of the repository, not nested inside an extra `src/` (or similar)
-  subdirectory.
+- The solution (`.sln`) file lives at the root level of the repository; every
+  project (`.csproj`) lives under `src/`, one folder per project, split
+  along dependency lines.
 
 ## 2. Developer Experience
 
