@@ -22,6 +22,24 @@ var viewport = new ViewportSize { Width = 1280, Height = 720 };
 
 Console.WriteLine($"Recording demo against {baseUrl}, output dir {outputDir}");
 
+// Blazor WASM's first page load (downloading + booting the framework) can comfortably outrun
+// Playwright's default 30s action timeout on a cold, CPU-constrained CI runner, even though the
+// app already answered /healthz. One throwaway request here warms Kestrel + the OS file cache
+// before any timed Playwright wait starts, so it isn't the host's own recorded page that eats it.
+using (var warmupClient = new HttpClient())
+{
+    try
+    {
+        await warmupClient.GetAsync(baseUrl);
+    }
+    catch
+    {
+        // best-effort -- if this fails, the real navigation below will surface the real problem
+    }
+}
+
+const int DefaultTimeoutMs = 60_000;
+
 using var playwright = await Playwright.CreateAsync();
 await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true });
 
@@ -33,11 +51,14 @@ var hostContext = await browser.NewContextAsync(new BrowserNewContextOptions
     RecordVideoDir = outputDir,
     RecordVideoSize = new RecordVideoSize { Width = viewport.Width, Height = viewport.Height },
 });
+hostContext.SetDefaultTimeout(DefaultTimeoutMs);
 
 var guestContexts = new List<IBrowserContext>();
 for (var i = 0; i < playerNames.Length - 1; i++)
 {
-    guestContexts.Add(await browser.NewContextAsync(new BrowserNewContextOptions { ViewportSize = viewport }));
+    var guestContext = await browser.NewContextAsync(new BrowserNewContextOptions { ViewportSize = viewport });
+    guestContext.SetDefaultTimeout(DefaultTimeoutMs);
+    guestContexts.Add(guestContext);
 }
 
 var host = new DemoPlayer(await hostContext.NewPageAsync());

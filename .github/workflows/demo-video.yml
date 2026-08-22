@@ -40,6 +40,7 @@ jobs:
       - name: Record demo
         id: record
         run: |
+          mkdir -p artifacts/demo-video
           dotnet run --project src/PlanningPoker.Tests.Play -c Release --no-build -- \
             http://localhost:5232 artifacts/demo-video | tee artifacts/demo-video.log
           video_path=$(grep -oP '(?<=^VIDEO_PATH=).+' artifacts/demo-video.log)
