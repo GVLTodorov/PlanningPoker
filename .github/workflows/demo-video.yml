@@ -67,6 +67,9 @@ jobs:
         if: always()
         run: kill "$(cat api.pid)" || true
 
+      - name: Install ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
       - name: Convert to mp4
         run: |
           mkdir -p docs
