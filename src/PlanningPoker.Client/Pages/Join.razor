@@ -44,7 +44,7 @@
     protected override async Task OnInitializedAsync()
     {
         var roomTask = RoomApi.GetRoomAsync(RoomId);
-        var avatarsTask = RoomApi.GetRandomAvatarsAsync(6);
+        var avatarsTask = RoomApi.GetRandomAvatarsAsync(5);
 
         await Task.WhenAll(roomTask, avatarsTask);
 

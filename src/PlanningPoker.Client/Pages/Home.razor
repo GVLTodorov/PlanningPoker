@@ -64,7 +64,7 @@
     {
         var nameTask = RoomApi.GetRoomNameSuggestionAsync();
         var decksTask = RoomApi.GetDecksAsync();
-        var avatarsTask = RoomApi.GetRandomAvatarsAsync(6);
+        var avatarsTask = RoomApi.GetRandomAvatarsAsync(5);
 
         await Task.WhenAll(nameTask, decksTask, avatarsTask);
 

@@ -120,8 +120,8 @@ either is unset, those features simply don't render — nothing else breaks.
 
 | Variable              | Example                                                                |
 |------------------------|-------------------------------------------------------------------------|
-| `GIPHY_API_BASE_URL`   | `https://api.giphy.com/v1/gifs/search?api_key=YOUR_GIPHY_API_KEY`      |
-| `GIPHY_API_QUERY`      | `limit=5&offset=0&rating=g&lang=en&bundle=low_bandwidth`               |
+| `GIPHY_API_BASE_URL`   | `https://api.giphy.com/v1/gifs/trending?api_key=YOUR_GIPHY_API_KEY`    |
+| `GIPHY_API_QUERY`      | `limit=10&offset=0&rating=g&lang=en`                                   |
 
 Never commit a real Giphy API key — set it only as an environment variable at deploy time (see
 [docker-compose.yml](docker-compose.yml) for a placeholder example).
