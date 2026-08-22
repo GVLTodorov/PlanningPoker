@@ -6,6 +6,10 @@
   <em>Real-time, self-hosted Planning Poker for agile estimation.</em>
 
   [![CI](https://github.com/GVLTodorov/PlanningPoker/actions/workflows/ci.yml/badge.svg)](https://github.com/GVLTodorov/PlanningPoker/actions/workflows/ci.yml)
+
+  <video src="docs/demo.mp4" controls muted width="720">
+    Demo: 5 players join a room, vote, the host reveals, resets, and everyone votes again.
+  </video>
 </div>
 
 ---
@@ -96,6 +100,8 @@ src/PlanningPoker.Tests.Integration/  WebApplicationFactory + a real SignalR cli
 src/PlanningPoker.Tests.Benchmarks/   BenchmarkDotNet: domain hot paths, JSON serialization, Giphy
                                        cache
 src/PlanningPoker.Tests.LoadTest/     Console tool: N rooms x M players, reports pick/reveal latency
+src/PlanningPoker.Tests.Play/         Playwright: joins, picks, reveals, and resets a room through
+                                       the real UI -- records the demo video above
 ```
 
 The Client depends only on Contracts — never Domain — so the browser bundle never ships
@@ -112,6 +118,13 @@ Runs the unit, component, and integration suites together. The [CI workflow](.gi
 runs the same command on every push/PR and gates the version-bump/image-build/push job on it
 passing. Performance checks (`PlanningPoker.Tests.Benchmarks`, `PlanningPoker.Tests.LoadTest`, and the bundle
 size check in CI) are run separately and don't gate every commit — see REQUIREMENTS.MD Section 10.3.
+
+The demo video above is produced by `PlanningPoker.Tests.Play`, a Playwright-driven browser
+simulation (5 players join, vote, reveal, reset, and vote again). It's not part of `dotnet test` —
+run it manually against a live instance (`dotnet run --project PlanningPoker.Tests.Play -- http://localhost:5232`),
+or trigger the [Demo Video workflow](.github/workflows/demo-video.yml) from the Actions tab to
+regenerate and commit `docs/demo.mp4`. That workflow needs `GIPHY_API_BASE_URL`/`GIPHY_API_QUERY`
+configured as repo secrets to show real gifs.
 
 ## Configuration
 

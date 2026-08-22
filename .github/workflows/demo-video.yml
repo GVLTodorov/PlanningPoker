@@ -1,0 +1,68 @@
+name: Demo Video
+
+# Manual only: this drives 5 real browsers against a live instance and needs a real Giphy API key
+# (GIPHY_API_BASE_URL/GIPHY_API_QUERY secrets) to show real gifs, so it isn't cheap or safe to run
+# on every push/PR the way ci.yml's jobs are. Trigger it on-demand from the Actions tab whenever
+# the UI changes enough to be worth a fresh demo.
+on:
+  workflow_dispatch:
+
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Build
+        run: dotnet build PlanningPoker.slnx -c Release
+
+      - name: Install Playwright's Chromium
+        run: pwsh src/PlanningPoker.Tests.Play/bin/Release/net10.0/playwright.ps1 install --with-deps chromium
+
+      - name: Start the app
+        env:
+          ASPNETCORE_URLS: http://localhost:5232
+          GIPHY_API_BASE_URL: ${{ secrets.GIPHY_API_BASE_URL }}
+          GIPHY_API_QUERY: ${{ secrets.GIPHY_API_QUERY }}
+        run: |
+          dotnet src/PlanningPoker.Api/bin/Release/net10.0/PlanningPoker.Api.dll > api.log 2>&1 &
+          echo $! > api.pid
+          timeout 30 bash -c 'until curl -sf http://localhost:5232/healthz >/dev/null; do sleep 1; done'
+
+      - name: Record demo
+        id: record
+        run: |
+          dotnet run --project src/PlanningPoker.Tests.Play -c Release --no-build -- \
+            http://localhost:5232 artifacts/demo-video | tee artifacts/demo-video.log
+          video_path=$(grep -oP '(?<=^VIDEO_PATH=).+' artifacts/demo-video.log)
+          echo "webm_path=$video_path" >> "$GITHUB_OUTPUT"
+
+      - name: Stop the app
+        if: always()
+        run: kill "$(cat api.pid)" || true
+
+      - name: Convert to mp4
+        run: |
+          mkdir -p docs
+          ffmpeg -y -i "${{ steps.record.outputs.webm_path }}" \
+            -c:v libx264 -crf 23 -preset veryfast -pix_fmt yuv420p docs/demo.mp4
+
+      - name: Commit updated demo video
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/demo.mp4
+          if git diff --cached --quiet; then
+            echo "Demo video unchanged, nothing to commit."
+          else
+            git commit -m "chore: refresh demo video"
+            git push
+          fi
