@@ -11,6 +11,11 @@
         <span class="field-label">Choose an avatar</span>
         <AvatarPicker AvatarUrls="AvatarUrls" SelectedUrl="@AvatarUrl" SelectedUrlChanged="OnAvatarSelected" />
     </div>
+
+    <label class="field checkbox-field">
+        <input type="checkbox" checked="@IsSpectator" @onchange="OnSpectatorChanged" />
+        <span>Join as spectator (watch without picking cards)</span>
+    </label>
 </div>
 
 @code {
@@ -32,6 +37,12 @@
     [Parameter]
     public EventCallback<string> AvatarUrlChanged { get; set; }
 
+    [Parameter]
+    public bool IsSpectator { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> IsSpectatorChanged { get; set; }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender)
@@ -46,4 +57,6 @@
     private Task OnNameInput(ChangeEventArgs args) => NameChanged.InvokeAsync((string?)args.Value ?? string.Empty);
 
     private Task OnAvatarSelected(string url) => AvatarUrlChanged.InvokeAsync(url);
+
+    private Task OnSpectatorChanged(ChangeEventArgs args) => IsSpectatorChanged.InvokeAsync((bool)(args.Value ?? false));
 }

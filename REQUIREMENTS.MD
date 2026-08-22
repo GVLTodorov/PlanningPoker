@@ -35,7 +35,7 @@ game state over SignalR or raw WebSockets.
 - Produce a versioned Docker image, following the CI pattern used in
   [GVLTodorov/Resume](https://github.com/GVLTodorov/Resume) (tests gate a
   version bump, which gates the image build/push).
-- The pipeline must run the test suite (see [Section 9](#9-testing-strategy))
+- The pipeline must run the test suite (see [Section 8](#8-testing-strategy))
   before building/publishing the image.
 
 ## 4. Deployment
@@ -79,6 +79,20 @@ planningpoker:
   API + Blazor WASM static files).
 - Include as an example file in the repo with a placeholder key.
 
+### 4.3 Operational endpoints
+
+- `GET /healthz` — unauthenticated liveness check (`{"status":"ok"}`), for
+  container orchestration / uptime monitoring. Not gated behind the `/api`
+  prefix the room/deck/avatar endpoints use.
+
+> **Giphy endpoint gotcha:** `GIPHY_API_BASE_URL` must point at
+> `https://api.giphy.com/v1/gifs/trending`, not `.../search`. The `search`
+> endpoint silently returns zero results (`HTTP 200`, `"data":[]`) without a
+> `q=` search term, which `GIPHY_API_QUERY` doesn't supply — the avatar
+> picker degrades to "No avatars available" exactly as if no key were
+> configured at all, with no error to signal why. `trending` needs no search
+> term and is what this app actually uses.
+
 ## 5. UX Workflows
 
 ### 5.1 Workflow A — Home Screen (create a room)
@@ -97,7 +111,14 @@ planningpoker:
    avatar. The **first avatar is selected by default**, and the currently
    selected avatar shows a **green highlight border** around it so the user
    can tell which one is picked.
-4. **Deck picker** is a dropdown; each option shows the deck's short label
+4. A **spectator checkbox** ("Join as spectator (watch without picking
+   cards)"), unchecked by default. Shared with the join flow — it lives in
+   the same `PlayerSetupForm` component used by both screens, so the room
+   creator can join as a spectator too (e.g. a facilitator who never
+   estimates), not just people joining via link. See
+   [5.4](#54-voting-round-lifecycle) for how a spectator's state differs
+   once inside the room.
+5. **Deck picker** is a dropdown; each option shows the deck's short label
    plus its actual values in brackets, e.g.:
    - `Fibonacci (0, 1, 2, 3, 5, 8, 13, 21, ...)`
    - `T-Shirt Sizes (XS, S, M, L, XL)`
@@ -106,11 +127,17 @@ planningpoker:
    (Exact deck names/values confirmed against the reference repo per
    [Section 0](#0-reference-implementation).)
 
-5. A checked, non-interactive **Host checkbox** — the room creator is always
+6. A checked, non-interactive **Host checkbox** — the room creator is always
    the host (see [Section 5.3](#53-host--room-ownership)); this just makes
    that visible, it isn't a toggle.
-6. Copy-URL button — copies the shareable room link to the clipboard.
-7. **Visual style:** green color palette; larger fonts, buttons, and spacing
+7. Copy-invite button — an icon-only button (copy glyph, swapping to a
+   checkmark once clicked; accessible via `aria-label`/`title` since there's
+   no visible text) that copies the shareable room link to the clipboard.
+   The link is the bare room URL with no `/join` suffix — visiting it
+   directly already shows the join screen when the visitor has no active
+   session (see [5.6](#56-session-persistence-across-a-page-refresh)), so
+   the suffix added nothing.
+8. **Visual style:** green color palette; larger fonts, buttons, and spacing
    than a typical dense web app — optimized for readability/ease of use for
    older users.
 
@@ -120,10 +147,12 @@ planningpoker:
 2. Show **6 random avatar images from Giphy** to pick from, same as the
    create flow (rounded square tiles, first avatar selected by default,
    selected avatar shows a green highlight border).
-3. **No Host checkbox is shown** — a player who joins via link is never the
+3. Same **spectator checkbox** as the create flow (see
+   [5.1](#51-workflow-a--home-screen-create-a-room) item 4).
+4. **No Host checkbox is shown** — a player who joins via link is never the
    host (see [Section 5.3](#53-host--room-ownership)).
-4. Keyboard focus starts on the **your name** textbox.
-5. Pressing **Enter** submits the join (no separate button click required).
+5. Keyboard focus starts on the **your name** textbox.
+6. Pressing **Enter** submits the join (no separate button click required).
 
 ### 5.3 Host / room ownership
 
@@ -160,17 +189,58 @@ planningpoker:
    - Clears all picks and starts a new round.
    - The button reverts back to **Reveal** (disabled until everyone has
      picked again).
+5. A **spectator** (see [5.1](#51-workflow-a--home-screen-create-a-room) item
+   4) never sees a hand of cards to pick from at all — their player card
+   shows a "Spectator" badge in place of a pick-state indicator, and they're
+   excluded from the "everyone has picked" reveal gate in step 2. A
+   spectator can still be the host (spectator and host are independent —
+   e.g. a facilitator who never estimates but still drives reveal/reset).
+6. A room isn't deleted the instant it empties. A page refresh briefly
+   drops the only open connection before the reload's rejoin lands a moment
+   later; deleting on the first disconnect would race that rejoin against
+   the delete. The last player leaving starts a short grace window (server
+   default: 15 seconds) before the room is actually removed, so a refresh
+   mid-session doesn't destroy the room out from under the person doing it.
 
 ### 5.5 Player card appearance
 
+- A player's **name is a label above their card**, not overlaid on the
+  avatar image — always fully legible regardless of the avatar, and wraps
+  onto a second line (reserving space for it up front, so cards in the same
+  row stay aligned) rather than truncating a long name.
 - Once chosen (in [5.1](#51-workflow-a--home-screen-create-a-room) /
   [5.2](#52-workflow-b--joining-via-a-shared-link)), a player's avatar gif is
   used as a low-opacity background image inside their player card on the
-  board — it's decorative texture, not the focal point.
-- The player's **name is the focal point**: rendered on top in high-contrast,
-  bold, readable text (solid/opaque text color, sized and weighted so it
-  stays legible regardless of what the background gif looks like — no
-  low-contrast text over busy backgrounds).
+  board — it's decorative texture, not the focal point. Hovering a card
+  brightens the avatar to full opacity and fades the pick-state content, so
+  a player can see the avatar clearly without needing to click into it.
+- Whatever's drawn over the avatar — the picked checkmark, the
+  waiting-to-pick indicator, the revealed value, the spectator badge — sits
+  on its own solid, semi-opaque backing (not bare text/shapes directly on
+  the image), so it stays legible regardless of what the avatar looks like.
+  This applies equally to the small pick-state indicators as to the larger
+  revealed value; a plain-colored glyph with no backing is not legible
+  enough against an arbitrary photo.
+
+### 5.6 Session persistence across a page refresh
+
+The identity a player picked on the create/join screen (name, avatar,
+spectator flag) is mirrored into the browser's `sessionStorage`, not just
+kept in memory. A full page refresh while on the board screen restores it
+and rejoins the room automatically, instead of bouncing the player back to
+the join screen and asking them to re-enter everything. Scoped to
+`sessionStorage` (not `localStorage`) deliberately: it survives a refresh
+within the same tab but doesn't linger indefinitely across unrelated future
+visits once the tab closes.
+
+### 5.7 Room/player rename (backend-only, no UI)
+
+The hub supports renaming a room (`RenameRoom`) and renaming a player
+in-room (`SetPlayerName`), and the client has wrapper methods for both
+(`GameHubClient.RenameRoomAsync` / `SetPlayerNameAsync`). Neither is
+currently exposed anywhere in the UI — there's no button or field that
+calls them. This is a known gap, not a deliberate scope decision either
+way; building the UI for one or both is a candidate for future work.
 
 ## 6. Giphy Integration
 
@@ -237,6 +307,18 @@ measure them with real benchmarks/load tests.
   where practical.
 - Response compression (Brotli/Gzip) enabled for the static Blazor WASM
   assets — the WASM download is the single biggest perf cost in this app.
+- Expected game-rule violations (spectator trying to pick, non-host trying
+  to reveal/reset/remove a player, reveal attempted before everyone has
+  picked, ...) are raised as built-in .NET exception types
+  (`InvalidOperationException`, `UnauthorizedAccessException`,
+  `ArgumentOutOfRangeException`, `KeyNotFoundException`), not a custom
+  exception hierarchy — the domain layer stays dependency-free, and a single
+  SignalR hub filter translates those specific types into a client-visible
+  `HubException`. This is a project-level decision, not a general
+  recommendation: it trades a small risk (an unrelated bug inside a hub
+  method throwing one of these same built-in types would also get forwarded
+  to the client) for not maintaining a parallel exception hierarchy whose
+  only real job was letting tests assert on distinct types.
 
 ### 10.2 Frontend (Blazor WASM) technique checklist
 
@@ -252,7 +334,12 @@ measure them with real benchmarks/load tests.
 ### 10.3 Performance / load testing
 
 - Micro-benchmarks (e.g. BenchmarkDotNet) for hot paths: game-state
-  mutation, broadcast serialization, Giphy client call.
+  mutation, broadcast serialization, Giphy client call. The CI benchmarks job
+  runs these with a shortened job (`--job short` — trades statistical
+  precision for a runtime that fits a shared runner) and publishes each
+  class's results table straight to the GitHub Actions job summary, plus the
+  full CSV/HTML/markdown artifacts, so results are visible on the run page
+  without digging into logs.
 - A load/soak test simulating many concurrent rooms and players
   picking/revealing rapidly — measure broadcast latency and CPU/memory
   under load, not just correctness.

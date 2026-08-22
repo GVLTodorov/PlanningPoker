@@ -25,7 +25,8 @@
         </label>
 
         <PlayerSetupForm Name="@_playerName" NameChanged="@(v => _playerName = v)"
-                          AvatarUrls="_avatarUrls" AvatarUrl="@_avatarUrl" AvatarUrlChanged="@(v => _avatarUrl = v)" />
+                          AvatarUrls="_avatarUrls" AvatarUrl="@_avatarUrl" AvatarUrlChanged="@(v => _avatarUrl = v)"
+                          IsSpectator="_isSpectator" IsSpectatorChanged="@(v => _isSpectator = v)" />
 
         <DeckPicker Decks="_decks" SelectedDeckType="_deckType" SelectedDeckTypeChanged="@(v => _deckType = v)" />
 
@@ -55,6 +56,7 @@
     private IReadOnlyList<string> _avatarUrls = [];
     private IReadOnlyList<DeckDto> _decks = [];
     private DeckType _deckType = DeckType.Fibonacci;
+    private bool _isSpectator;
     private bool _isCreating;
     private string? _error;
 
@@ -94,7 +96,7 @@
 
         Session.PlayerName = _playerName.Trim();
         Session.AvatarUrl = _avatarUrl;
-        Session.IsSpectator = false;
+        Session.IsSpectator = _isSpectator;
         await Session.SaveAsync();
 
         Navigation.NavigateTo($"/{room.RoomId}");

@@ -16,7 +16,8 @@
 
         <form class="stack-form" @onsubmit="JoinRoom">
             <PlayerSetupForm Name="@_playerName" NameChanged="@(v => _playerName = v)"
-                              AvatarUrls="_avatarUrls" AvatarUrl="@_avatarUrl" AvatarUrlChanged="@(v => _avatarUrl = v)" />
+                              AvatarUrls="_avatarUrls" AvatarUrl="@_avatarUrl" AvatarUrlChanged="@(v => _avatarUrl = v)"
+                              IsSpectator="_isSpectator" IsSpectatorChanged="@(v => _isSpectator = v)" />
 
             @if (!string.IsNullOrEmpty(_error))
             {
@@ -37,6 +38,7 @@
     private string _playerName = string.Empty;
     private string? _avatarUrl;
     private IReadOnlyList<string> _avatarUrls = [];
+    private bool _isSpectator;
     private string? _error;
 
     protected override async Task OnInitializedAsync()
@@ -63,7 +65,7 @@
 
         Session.PlayerName = _playerName.Trim();
         Session.AvatarUrl = _avatarUrl;
-        Session.IsSpectator = false;
+        Session.IsSpectator = _isSpectator;
         await Session.SaveAsync();
 
         Navigation.NavigateTo($"/{RoomId}");
