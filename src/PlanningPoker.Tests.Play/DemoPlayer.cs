@@ -24,6 +24,7 @@ public sealed class DemoPlayer(IPage page)
         await Page.GetByLabel("Your name").FillAsync(playerName);
         await PickUnusedAvatarAsync(usedAvatars);
 
+        await Task.Delay(2_500); // lingers on the filled-in form so the recording shows the menus
         await Page.GetByRole(AriaRole.Button, new() { Name = "Create Room" }).ClickAsync();
         await Page.Locator(".player-list").WaitForAsync();
 
