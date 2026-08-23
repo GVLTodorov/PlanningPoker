@@ -70,20 +70,26 @@ jobs:
       - name: Install ffmpeg
         run: sudo apt-get update && sudo apt-get install -y ffmpeg
 
-      - name: Convert to mp4
+      # GitHub's README sanitizer strips raw <video> tags entirely (verified: fetched this repo's
+      # own rendered README HTML via the API and the tag was gone, no trace) -- an mp4 can't be
+      # embedded inline that way. A GIF renders everywhere markdown images do, so that's the
+      # actual embed; the two-pass palette filter keeps a 24s/800px clip to a few MB instead of the
+      # tens of MB a naive conversion produces.
+      - name: Convert to GIF
         run: |
           mkdir -p docs
           ffmpeg -y -i "${{ steps.record.outputs.webm_path }}" \
-            -c:v libx264 -crf 23 -preset veryfast -pix_fmt yuv420p docs/demo.mp4
+            -vf "fps=12,scale=800:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" \
+            docs/demo.gif
 
-      - name: Commit updated demo video
+      - name: Commit updated demo GIF
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/demo.mp4
+          git add docs/demo.gif
           if git diff --cached --quiet; then
-            echo "Demo video unchanged, nothing to commit."
+            echo "Demo GIF unchanged, nothing to commit."
           else
-            git commit -m "chore: refresh demo video"
+            git commit -m "chore: refresh demo gif"
             git push
           fi

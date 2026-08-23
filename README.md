@@ -7,9 +7,7 @@
 
   [![CI](https://github.com/GVLTodorov/PlanningPoker/actions/workflows/ci.yml/badge.svg)](https://github.com/GVLTodorov/PlanningPoker/actions/workflows/ci.yml)
 
-  <video src="docs/demo.mp4" controls muted width="720">
-    Demo: 5 players join a room, vote, the host reveals, resets, and everyone votes again.
-  </video>
+  ![Demo: 5 players join a room, vote, the host reveals, resets, and everyone votes again.](docs/demo.gif)
 </div>
 
 ---
@@ -123,7 +121,7 @@ The demo video above is produced by `PlanningPoker.Tests.Play`, a Playwright-dri
 simulation (5 players join, vote, reveal, reset, and vote again). It's not part of `dotnet test` —
 run it manually against a live instance (`dotnet run --project PlanningPoker.Tests.Play -- http://localhost:5232`),
 or trigger the [Demo Video workflow](.github/workflows/demo-video.yml) from the Actions tab to
-regenerate and commit `docs/demo.mp4`. That workflow needs `GIPHY_API_BASE_URL`/`GIPHY_API_QUERY`
+regenerate and commit `docs/demo.gif`. That workflow needs `GIPHY_API_BASE_URL`/`GIPHY_API_QUERY`
 configured as repo secrets to show real gifs.
 
 ## Configuration
