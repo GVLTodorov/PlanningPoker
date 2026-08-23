@@ -14,6 +14,7 @@
     --color-text: #12291a;
     --color-text-muted: #4b6355;
     --color-danger: #b3261e;
+    --color-warning: #b8860b;
     --space-1: 0.5rem;
     --space-2: 0.75rem;
     --space-3: 1rem;
@@ -213,7 +214,7 @@ a {
     width: 6rem;
     height: 4.5rem;
     border-radius: var(--radius);
-    border: 3px solid transparent;
+    border: 5px solid transparent;
     overflow: hidden;
     cursor: pointer;
     background: var(--color-surface-muted);
@@ -227,7 +228,7 @@ a {
 
 .avatar-option-selected {
     border-color: var(--color-green-600);
-    box-shadow: 0 0 0 3px var(--color-green-100);
+    box-shadow: 0 0 0 7px var(--color-green-200);
 }
 
 .avatar-option:focus-visible {
@@ -290,11 +291,12 @@ a {
     overflow: hidden;
     background: var(--color-surface);
     box-shadow: 0 1px 3px rgba(13, 63, 32, 0.12);
-    border: 2px solid transparent;
+    border: 4px solid transparent;
 }
 
 .player-card-local {
-    border-color: var(--color-green-400);
+    border-color: var(--color-green-600);
+    box-shadow: 0 0 0 4px var(--color-green-200);
 }
 
 .player-card-background {
@@ -436,8 +438,11 @@ a {
 .hand-selector {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
+    align-content: center;
     gap: var(--space-2);
     margin: var(--space-4) 0;
+    min-height: 8.5rem;
 }
 
 .hand-card {
@@ -470,6 +475,88 @@ a {
 .hand-card:focus-visible {
     outline: 3px solid var(--color-green-600);
     outline-offset: 2px;
+}
+
+/* Vote summary */
+
+.vote-summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    margin: var(--space-4) 0;
+    min-height: 8.5rem;
+    padding: var(--space-3);
+    background: var(--color-surface-muted);
+    border-radius: var(--radius);
+}
+
+.vote-summary-groups {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+}
+
+.vote-summary-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.vote-summary-card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 3.5rem;
+    min-height: 5rem;
+    font-size: 1.25rem;
+    font-weight: 700;
+    border-radius: var(--radius);
+    border: 2px solid var(--color-green-400);
+    background: var(--color-surface);
+    color: var(--color-green-800);
+}
+
+.vote-summary-count {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.vote-summary-stats {
+    display: flex;
+    gap: var(--space-4);
+}
+
+.vote-summary-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.vote-summary-stat-label {
+    color: var(--color-text-muted);
+}
+
+.vote-summary-stat-value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--color-text);
+}
+
+.vote-summary-agreement-low {
+    color: var(--color-danger);
+}
+
+.vote-summary-agreement-medium {
+    color: var(--color-warning);
+}
+
+.vote-summary-agreement-high {
+    color: var(--color-green-600);
 }
 
 /* Framework infrastructure (unchanged behavior, restyled to match the palette) */

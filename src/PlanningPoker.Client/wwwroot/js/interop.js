@@ -1,3 +1,23 @@
+import confetti from "./vendor/confetti.js";
+
+function fireConfettiBurst(particleRatio, options) {
+    confetti({
+        ...options,
+        disableForReducedMotion: true,
+        particleCount: Math.floor(200 * particleRatio),
+    });
+}
+
+// Mirrors the burst sequence self-host-planning-poker fires when a round reveals unanimous agreement.
+export function celebrateConsensus() {
+    const origin = { x: 0.5, y: 0.6 };
+    fireConfettiBurst(0.25, { origin, spread: 26, startVelocity: 55 });
+    fireConfettiBurst(0.2, { origin, spread: 60 });
+    fireConfettiBurst(0.35, { origin, spread: 100, decay: 0.91, scalar: 0.8 });
+    fireConfettiBurst(0.1, { origin, spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.2 });
+    fireConfettiBurst(0.1, { origin, spread: 120, startVelocity: 45 });
+}
+
 export function focusElement(selector) {
     const element = document.querySelector(selector);
     element?.focus();

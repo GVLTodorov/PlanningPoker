@@ -1,0 +1,53 @@
+@if (Voters.Count > 0)
+{
+    <div class="vote-summary">
+        <div class="vote-summary-groups">
+            @foreach (var group in VoteGroups)
+            {
+                <div class="vote-summary-group">
+                    <span class="vote-summary-card">@group.Label</span>
+                    <span class="vote-summary-count">@group.Count @(group.Count == 1 ? "Vote" : "Votes")</span>
+                </div>
+            }
+        </div>
+
+        <div class="vote-summary-stats">
+            <div class="vote-summary-stat">
+                <span class="vote-summary-stat-label">Average</span>
+                <span class="vote-summary-stat-value">@Average.ToString("0.##")</span>
+            </div>
+            <div class="vote-summary-stat">
+                <span class="vote-summary-stat-label">Agreement</span>
+                <span class="vote-summary-stat-value @AgreementClass">@($"{Math.Round(Agreement * 100)}%")</span>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public IReadOnlyList<PlayerDto> Players { get; set; } = [];
+
+    private List<PlayerDto> Voters =>
+        Players.Where(p => !p.IsSpectator && p.Card is not null).ToList();
+
+    private List<VoteGroup> VoteGroups =>
+        Voters
+            .GroupBy(p => p.Card!.Value)
+            .OrderByDescending(g => g.Key)
+            .Select(g => new VoteGroup(g.First().Card!.Label, g.Count()))
+            .ToList();
+
+    private double Average => Voters.Count > 0 ? Voters.Average(p => p.Card!.Value) : 0;
+
+    private double Agreement => Voters.Count > 0 ? VoteGroups.Max(g => g.Count) / (double)Voters.Count : 0;
+
+    private string AgreementClass => Agreement switch
+    {
+        < 0.5 => "vote-summary-agreement-low",
+        < 0.7 => "vote-summary-agreement-medium",
+        _ => "vote-summary-agreement-high",
+    };
+
+    private sealed record VoteGroup(string Label, int Count);
+}
