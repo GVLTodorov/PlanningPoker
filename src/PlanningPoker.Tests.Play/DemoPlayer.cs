@@ -25,7 +25,11 @@ public sealed class DemoPlayer(IPage page)
         await PickUnusedAvatarAsync(usedAvatars);
 
         await Task.Delay(2_500); // lingers on the filled-in form so the recording shows the menus
-        await Page.GetByRole(AriaRole.Button, new() { Name = "Create Room" }).ClickAsync();
+
+        var createRoomButton = Page.GetByRole(AriaRole.Button, new() { Name = "Create Room" });
+        await createRoomButton.ScrollIntoViewIfNeededAsync(); // reveals the deck picker + button
+        await Task.Delay(1_000);
+        await createRoomButton.ClickAsync();
         await Page.Locator(".player-list").WaitForAsync();
 
         return RoomIdFromUrl();
