@@ -198,10 +198,46 @@ a {
     align-items: center;
     justify-content: center;
     width: var(--touch-target);
+    height: var(--touch-target);
     padding: 0;
+    border: none;
+    border-radius: var(--radius);
+    background: transparent;
+    color: var(--color-green-700);
+    cursor: pointer;
+}
+
+.icon-button:hover:not(:disabled) {
+    background: var(--color-green-50);
+}
+
+.icon-button:focus-visible {
+    outline: 3px solid var(--color-green-600);
+    outline-offset: 2px;
+}
+
+.icon-button:disabled {
+    color: var(--color-text-muted);
+    cursor: not-allowed;
+}
+
+.icon-button-spinning svg {
+    animation: icon-spin 0.8s linear infinite;
+}
+
+@keyframes icon-spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* Avatar picker */
+
+.field-label-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+}
 
 .avatar-picker {
     display: flex;

@@ -9,7 +9,8 @@
         "build",
         "${workspaceFolder}/PlanningPoker.slnx",
         "/property:GenerateFullPaths=true",
-        "/consoleloggerparameters:NoSummary"
+        "/consoleloggerparameters:NoSummary",
+        "/nodeReuse:false"
       ],
       "problemMatcher": "$msCompile"
     }

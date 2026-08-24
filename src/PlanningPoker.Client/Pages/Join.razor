@@ -17,6 +17,7 @@
         <form class="stack-form" @onsubmit="JoinRoom">
             <PlayerSetupForm Name="@_playerName" NameChanged="@(v => _playerName = v)"
                               AvatarUrls="_avatarUrls" AvatarUrl="@_avatarUrl" AvatarUrlChanged="@(v => _avatarUrl = v)"
+                              IsRefreshingAvatars="_isRefreshingAvatars" RefreshAvatars="RefreshAvatarsAsync"
                               IsSpectator="_isSpectator" IsSpectatorChanged="@(v => _isSpectator = v)" />
 
             @if (!string.IsNullOrEmpty(_error))
@@ -39,6 +40,7 @@
     private string? _avatarUrl;
     private IReadOnlyList<string> _avatarUrls = [];
     private bool _isSpectator;
+    private bool _isRefreshingAvatars;
     private string? _error;
 
     protected override async Task OnInitializedAsync()
@@ -52,6 +54,14 @@
         _avatarUrls = await avatarsTask;
         _avatarUrl = _avatarUrls.Count > 0 ? _avatarUrls[0] : null;
         _notFound = _room is null;
+    }
+
+    private async Task RefreshAvatarsAsync()
+    {
+        _isRefreshingAvatars = true;
+        _avatarUrls = await RoomApi.GetRandomAvatarsAsync(5);
+        _avatarUrl = _avatarUrls.Count > 0 ? _avatarUrls[0] : null;
+        _isRefreshingAvatars = false;
     }
 
     // Enter submits natively -- this is a real <form>, no separate button-click handling needed.

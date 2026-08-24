@@ -26,6 +26,7 @@
 
         <PlayerSetupForm Name="@_playerName" NameChanged="@(v => _playerName = v)"
                           AvatarUrls="_avatarUrls" AvatarUrl="@_avatarUrl" AvatarUrlChanged="@(v => _avatarUrl = v)"
+                          IsRefreshingAvatars="_isRefreshingAvatars" RefreshAvatars="RefreshAvatarsAsync"
                           IsSpectator="_isSpectator" IsSpectatorChanged="@(v => _isSpectator = v)" />
 
         <DeckPicker Decks="_decks" SelectedDeckType="_deckType" SelectedDeckTypeChanged="@(v => _deckType = v)" />
@@ -58,6 +59,7 @@
     private DeckType _deckType = DeckType.Fibonacci;
     private bool _isSpectator;
     private bool _isCreating;
+    private bool _isRefreshingAvatars;
     private string? _error;
 
     protected override async Task OnInitializedAsync()
@@ -72,6 +74,14 @@
         _decks = await decksTask;
         _avatarUrls = await avatarsTask;
         _avatarUrl = _avatarUrls.Count > 0 ? _avatarUrls[0] : null;
+    }
+
+    private async Task RefreshAvatarsAsync()
+    {
+        _isRefreshingAvatars = true;
+        _avatarUrls = await RoomApi.GetRandomAvatarsAsync(5);
+        _avatarUrl = _avatarUrls.Count > 0 ? _avatarUrls[0] : null;
+        _isRefreshingAvatars = false;
     }
 
     private async Task CreateRoomAsync()
