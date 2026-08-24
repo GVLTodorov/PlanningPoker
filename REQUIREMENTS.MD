@@ -258,6 +258,42 @@ way; building the UI for one or both is a candidate for future work.
   ([5.2](#52-workflow-b--joining-via-a-shared-link)). There is no reveal-gif
   feature — the round-reveal step is Giphy-free.
 
+### 6.1 Offline fallback: bundled AI-generated avatars (candidate for future work)
+
+Not yet built — a known gap, like [5.7](#57-roomplayer-rename-backend-only-no-ui).
+Today, when `GIPHY_API_BASE_URL`/`GIPHY_API_QUERY` are unset, `NullGiphyClient`
+returns zero avatars and the picker shows "No avatars available right now."
+That's an acceptable degrade, but a deployment that simply doesn't want a
+live Giphy dependency (no API key, no outbound call, no rate limit) currently
+has no way to show avatars at all.
+
+- A small fixed set of avatar images (10-15) is **generated once, offline,
+  using an AI image-generation tool** — not downloaded/scraped from Giphy or
+  any other third party — and checked into
+  `PlanningPoker.Client/wwwroot/avatars/`, served as ordinary static files.
+  No new endpoint needed, `app.UseStaticFiles()` already covers it. Because
+  the images are original AI-authored content created for this project
+  rather than someone else's copyrighted work, this sidesteps the
+  redistribution-licensing problem a bundle of real Giphy gifs would have
+  had — but confirm the specific generation tool's terms allow redistributing
+  its output before committing them, since those terms vary by provider.
+- A new `IGiphyClient` implementation (e.g. `BundledAvatarClient`) replaces
+  `NullGiphyClient` as the fallback: same shuffle-and-take random selection
+  `GiphyClient` already does in `GiphyClient.GetRandomImageUrlsAsync`, just
+  sampling from the bundled file list instead of a live API response. No
+  client-side change needed — `AvatarPicker` already just renders whatever
+  URLs it's given.
+- Registration mirrors the existing `GiphyOptions.IsConfigured` branch in
+  `Program.cs`: configured → `GiphyClient` (live), unconfigured →
+  `BundledAvatarClient` (offline) instead of today's `NullGiphyClient`. This
+  removes the "no avatars available" empty state for the unconfigured case
+  entirely; keep `NullGiphyClient`'s empty-list behavior only as the
+  genuinely-broken-deployment fallback (bundled folder missing/empty at
+  runtime), not the normal unconfigured path.
+- Stays truly offline at runtime either way: generation happens once, at
+  authoring time, not per-request — no network call, no API key, no rate
+  limit for this path, ever.
+
 ## 7. Visual Design
 
 - Primary color palette: green.
