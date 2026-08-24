@@ -42,9 +42,9 @@ against).
   together. Reveal is only available once every non-spectator has picked, enforced by the server,
   not just a disabled button.
 - **Spectator mode** for anyone who wants to watch without voting.
-- **Giphy-powered avatars and reveal gifs** — three random avatars to choose from when you join,
-  and a celebratory gif alongside every reveal. Fully optional: the app runs cleanly with no Giphy
-  features when unconfigured.
+- **Giphy-powered avatars** — five random avatars to choose from when you join, with a refresh
+  button to fetch a new batch. Fully optional: the app runs cleanly with no Giphy features when
+  unconfigured.
 - **Accessible-by-default styling**: a green palette, large fonts, and generous touch targets
   aimed at comfortable use for players of any age.
 

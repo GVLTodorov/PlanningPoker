@@ -106,11 +106,13 @@ planningpoker:
    fails with an error asking for a different name.
 2. Keyboard focus starts on the **your name** field (the thing the user
    actually needs to type).
-3. Show **6 random avatar images fetched from Giphy**, rendered as rounded
+3. Show **5 random avatar images fetched from Giphy**, rendered as rounded
    square tiles (not circles), for the user to pick from as their player
    avatar. The **first avatar is selected by default**, and the currently
    selected avatar shows a **green highlight border** around it so the user
-   can tell which one is picked.
+   can tell which one is picked. A **refresh button** next to the "Choose an
+   avatar" label re-fetches a new random batch of 5 without touching
+   anything else on the form.
 4. A **spectator checkbox** ("Join as spectator (watch without picking
    cards)"), unchecked by default. Shared with the join flow — it lives in
    the same `PlayerSetupForm` component used by both screens, so the room
@@ -130,13 +132,15 @@ planningpoker:
 6. A checked, non-interactive **Host checkbox** — the room creator is always
    the host (see [Section 5.3](#53-host--room-ownership)); this just makes
    that visible, it isn't a toggle.
-7. Copy-invite button — an icon-only button (copy glyph, swapping to a
-   checkmark once clicked; accessible via `aria-label`/`title` since there's
-   no visible text) that copies the shareable room link to the clipboard.
-   The link is the bare room URL with no `/join` suffix — visiting it
-   directly already shows the join screen when the visitor has no active
-   session (see [5.6](#56-session-persistence-across-a-page-refresh)), so
-   the suffix added nothing.
+7. Once the room is created, its board screen header shows a copy-invite
+   button next to the room name — an icon-only button (copy glyph, swapping
+   to a checkmark once clicked; accessible via `aria-label`/`title` since
+   there's no visible text) that copies the shareable room link to the
+   clipboard. Visible to every player in the room, not just the host. The
+   link is the bare room URL with no `/join` suffix — visiting it directly
+   already shows the join screen when the visitor has no active session (see
+   [5.6](#56-session-persistence-across-a-page-refresh)), so the suffix
+   added nothing.
 8. **Visual style:** green color palette; larger fonts, buttons, and spacing
    than a typical dense web app — optimized for readability/ease of use for
    older users.
@@ -144,9 +148,10 @@ planningpoker:
 ### 5.2 Workflow B — Joining via a shared link
 
 1. A second user opens the shared room URL.
-2. Show **6 random avatar images from Giphy** to pick from, same as the
+2. Show **5 random avatar images from Giphy** to pick from, same as the
    create flow (rounded square tiles, first avatar selected by default,
-   selected avatar shows a green highlight border).
+   selected avatar shows a green highlight border, refresh button re-fetches
+   a new batch).
 3. Same **spectator checkbox** as the create flow (see
    [5.1](#51-workflow-a--home-screen-create-a-room) item 4).
 4. **No Host checkbox is shown** — a player who joins via link is never the
@@ -247,10 +252,11 @@ way; building the UI for one or both is a candidate for future work.
 - Configured via `GIPHY_API_BASE_URL` and `GIPHY_API_QUERY` env vars (see
   [Section 4](#4-deployment)); the app must run fine with no visible Giphy
   features when unset.
-- Used in one place: the **avatar picker** — 6 random avatars on both the
-  create-room screen ([5.1](#51-workflow-a--home-screen-create-a-room)) and
-  the join screen ([5.2](#52-workflow-b--joining-via-a-shared-link)). There is
-  no reveal-gif feature — the round-reveal step is Giphy-free.
+- Used in one place: the **avatar picker** — 5 random avatars, refreshable on
+  demand, on both the create-room screen
+  ([5.1](#51-workflow-a--home-screen-create-a-room)) and the join screen
+  ([5.2](#52-workflow-b--joining-via-a-shared-link)). There is no reveal-gif
+  feature — the round-reveal step is Giphy-free.
 
 ## 7. Visual Design
 
@@ -270,6 +276,17 @@ way; building the UI for one or both is a candidate for future work.
 - The CI pipeline (see [Section 3](#3-devops--ci-cd)) must run both the unit
   and integration test suites and fail the build/version-bump/image-push on
   any failure.
+- `PlanningPoker.Tests.Play` (and `PlanningPoker.Tests.Play.Twelve`, the same
+  flow scaled to 12 players) drive the real UI through Playwright — join,
+  pick, reveal, reset — and double as a live smoke test: every wait targets
+  a specific element, so a stuck flow fails with a `TimeoutException`
+  instead of silently producing a broken demo. Not gated in CI (same
+  non-gating treatment as [Section 10.3](#103-performance--load-testing));
+  triggered manually via the
+  [Demo Video](.github/workflows/demo-video.yml) /
+  [Demo Video (Twelve Players)](.github/workflows/demo-video-twelve.yml)
+  workflows, which commit the regenerated `docs/demo.gif` /
+  `docs/twelve.gif`.
 - See [Section 10](#10-performance) for performance-specific tests.
 
 ## 9. Documentation & Branding
@@ -342,7 +359,19 @@ measure them with real benchmarks/load tests.
   without digging into logs.
 - A load/soak test simulating many concurrent rooms and players
   picking/revealing rapidly — measure broadcast latency and CPU/memory
-  under load, not just correctness.
+  under load, not just correctness. Implemented as two separate tools, each
+  runnable manually against a live instance:
+  - `PlanningPoker.Tests.LoadTest` — N rooms x M players hammering
+    pick/reveal/reset as fast as possible over real SignalR connections,
+    reporting the `PickCard` round trip's p50/p95/p99/max latency.
+  - `PlanningPoker.Tests.Play.Hundred` — 10 rooms x 10 players (100 real
+    SignalR connections, no browsers) voting at a human pace (each room's
+    round takes 15-20 wall-clock seconds, picks staggered rather than
+    simultaneous) while sampling `PlanningPoker.Api`'s own CPU% and
+    working-set memory and rendering the series as an SVG chart. Triggered
+    manually via the [Demo Hundred workflow](.github/workflows/demo-hundred.yml),
+    which commits the refreshed chart to `docs/hundred-resource-usage.svg`
+    (embedded in the README's Performance section).
 - Track the published Blazor WASM bundle size and flag/fail on regressions
   past a set threshold, since download size is the primary perf metric
   users actually feel.
