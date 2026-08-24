@@ -116,7 +116,7 @@ foreach (var player in players)
 
 Console.WriteLine("Host reveals...");
 await host.RevealAsync();
-await Task.Delay(2_000);
+await Task.Delay(4_000);
 
 Console.WriteLine("Host resets...");
 await host.ResetAsync();
@@ -131,7 +131,7 @@ foreach (var player in players)
 
 Console.WriteLine("Host reveals again...");
 await host.RevealAsync();
-await Task.Delay(2_000);
+await Task.Delay(4_000);
 
 foreach (var context in guestContexts)
 {
