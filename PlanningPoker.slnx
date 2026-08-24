@@ -7,5 +7,6 @@
   <Project Path="src/PlanningPoker.Tests.Integration/PlanningPoker.Tests.Integration.csproj" />
   <Project Path="src/PlanningPoker.Tests.LoadTest/PlanningPoker.Tests.LoadTest.csproj" />
   <Project Path="src/PlanningPoker.Tests.Play/PlanningPoker.Tests.Play.csproj" />
+  <Project Path="src/PlanningPoker.Tests.Play.Twelve/PlanningPoker.Tests.Play.Twelve.csproj" />
   <Project Path="src/PlanningPoker.Tests.Unit/PlanningPoker.Tests.Unit.csproj" />
 </Solution>
