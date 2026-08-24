@@ -1,4 +1,4 @@
-using Bunit;
+﻿using Bunit;
 using PlanningPoker.Client.Components;
 using PlanningPoker.Contracts;
 using Xunit;
@@ -7,10 +7,10 @@ namespace PlanningPoker.Tests.Component;
 
 public class DeckPickerTests : BunitContext
 {
-    private static readonly List<DeckDto> Decks =
+    private static readonly List<DeckResponse> Decks =
     [
-        new(DeckType.Fibonacci, "Fibonacci", [new CardOptionDto(0, 0, "0"), new CardOptionDto(1, 1, "1"), new CardOptionDto(2, 2, "2")]),
-        new(DeckType.TShirts, "T-Shirt Sizes", [new CardOptionDto(0, 1, "XS"), new CardOptionDto(1, 2, "S")]),
+        new(DeckType.Fibonacci, "Fibonacci", [new CardOptionResponse(0, 0, "0"), new CardOptionResponse(1, 1, "1"), new CardOptionResponse(2, 2, "2")]),
+        new(DeckType.TShirts, "T-Shirt Sizes", [new CardOptionResponse(0, 1, "XS"), new CardOptionResponse(1, 2, "S")]),
     ];
 
     [Fact]

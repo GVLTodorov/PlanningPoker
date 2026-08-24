@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Components;
+﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
 using PlanningPoker.Contracts;
 using PlanningPoker.Contracts.Messages;
@@ -11,7 +11,7 @@ public sealed class GameHubClient : IAsyncDisposable
 {
     private readonly HubConnection _connection;
 
-    public event Action<RoomStateDto>? RoomStateChanged;
+    public event Action<RoomStateResponse>? RoomStateChanged;
     public event Action<PlayerPickStatusChanged>? PlayerPickChanged;
     public event Action<RoundRevealed>? RoundRevealed;
     public event Action? RoundReset;
@@ -25,7 +25,7 @@ public sealed class GameHubClient : IAsyncDisposable
             .AddJsonProtocol(options => options.PayloadSerializerOptions = PlanningPokerJsonContext.CreateOptions())
             .Build();
 
-        _connection.On<RoomStateDto>("RoomStateChanged", state => RoomStateChanged?.Invoke(state));
+        _connection.On<RoomStateResponse>("RoomStateChanged", state => RoomStateChanged?.Invoke(state));
         _connection.On<PlayerPickStatusChanged>("PlayerPickStatusChanged", change => PlayerPickChanged?.Invoke(change));
         _connection.On<RoundRevealed>("RoundRevealed", revealed => RoundRevealed?.Invoke(revealed));
         _connection.On("RoundReset", () => RoundReset?.Invoke());
@@ -36,9 +36,9 @@ public sealed class GameHubClient : IAsyncDisposable
 
     public Task StartAsync(CancellationToken cancellationToken = default) => _connection.StartAsync(cancellationToken);
 
-    public Task<JoinRoomResult> JoinRoomAsync(
+    public Task<JoinRoomResponse> JoinRoomAsync(
         string roomId, string playerName, bool isSpectator, string? avatarUrl, Guid? existingPlayerId = null) =>
-        _connection.InvokeAsync<JoinRoomResult>(
+        _connection.InvokeAsync<JoinRoomResponse>(
             "JoinRoom", roomId, playerName, isSpectator, avatarUrl, existingPlayerId);
 
     public Task LeaveRoomAsync() => _connection.InvokeAsync("LeaveRoom");

@@ -1,4 +1,4 @@
-using Bunit;
+﻿using Bunit;
 using PlanningPoker.Client.Components;
 using PlanningPoker.Contracts;
 using Xunit;
@@ -7,8 +7,8 @@ namespace PlanningPoker.Tests.Component;
 
 public class VoteSummaryTests : BunitContext
 {
-    private static PlayerDto Voter(double value, string label, bool isSpectator = false) =>
-        new(Guid.NewGuid(), "Player", isSpectator, false, null, true, new CardOptionDto(0, value, label));
+    private static PlayerResponse Voter(double value, string label, bool isSpectator = false) =>
+        new(Guid.NewGuid(), "Player", isSpectator, false, null, true, new CardOptionResponse(0, value, label));
 
     [Fact]
     public void RendersNothing_WhenNoVoters()
@@ -21,7 +21,7 @@ public class VoteSummaryTests : BunitContext
     [Fact]
     public void GroupsVotesByValue_DescendingWithCounts()
     {
-        var players = new List<PlayerDto>
+        var players = new List<PlayerResponse>
         {
             Voter(3, "3"),
             Voter(3, "3"),
@@ -41,7 +41,7 @@ public class VoteSummaryTests : BunitContext
     [Fact]
     public void ExcludesSpectatorsAndUnpickedPlayers_FromCalculations()
     {
-        var players = new List<PlayerDto>
+        var players = new List<PlayerResponse>
         {
             Voter(2, "2"),
             Voter(4, "4", isSpectator: true),
@@ -57,7 +57,7 @@ public class VoteSummaryTests : BunitContext
     [Fact]
     public void ComputesAverage()
     {
-        var players = new List<PlayerDto> { Voter(2, "2"), Voter(4, "4") };
+        var players = new List<PlayerResponse> { Voter(2, "2"), Voter(4, "4") };
 
         var cut = Render<VoteSummary>(p => p.Add(x => x.Players, players));
 
@@ -67,7 +67,7 @@ public class VoteSummaryTests : BunitContext
     [Fact]
     public void ShowsFullAgreement_AsHighClass_WhenUnanimous()
     {
-        var players = new List<PlayerDto> { Voter(5, "5"), Voter(5, "5") };
+        var players = new List<PlayerResponse> { Voter(5, "5"), Voter(5, "5") };
 
         var cut = Render<VoteSummary>(p => p.Add(x => x.Players, players));
 
@@ -79,7 +79,7 @@ public class VoteSummaryTests : BunitContext
     [Fact]
     public void ShowsSplitAgreement_AsLowClass_WhenBelowHalf()
     {
-        var players = new List<PlayerDto> { Voter(1, "1"), Voter(2, "2"), Voter(3, "3") };
+        var players = new List<PlayerResponse> { Voter(1, "1"), Voter(2, "2"), Voter(3, "3") };
 
         var cut = Render<VoteSummary>(p => p.Add(x => x.Players, players));
 

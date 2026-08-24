@@ -1,4 +1,4 @@
-<div class="hand-selector" role="group" aria-label="Pick your estimate">
+﻿<div class="hand-selector" role="group" aria-label="Pick your estimate">
     @foreach (var card in Deck)
     {
         <button type="button"
@@ -12,7 +12,7 @@
 
 @code {
     [Parameter, EditorRequired]
-    public IReadOnlyList<CardOptionDto> Deck { get; set; } = [];
+    public IReadOnlyList<CardOptionResponse> Deck { get; set; } = [];
 
     [Parameter]
     public int? SelectedCardIndex { get; set; }

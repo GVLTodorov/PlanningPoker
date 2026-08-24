@@ -1,4 +1,4 @@
-using Bunit;
+﻿using Bunit;
 using PlanningPoker.Client.Components;
 using PlanningPoker.Contracts;
 using Xunit;
@@ -10,7 +10,7 @@ public class PlayerCardTests : BunitContext
     [Fact]
     public void RendersBackgroundLayer_SeparateFromNameText_WhenAvatarPresent()
     {
-        var player = new PlayerDto(Guid.NewGuid(), "Alice", false, false, "https://example.test/a.gif", false, null);
+        var player = new PlayerResponse(Guid.NewGuid(), "Alice", false, false, "https://example.test/a.gif", false, null);
 
         var cut = Render<PlayerCard>(p => p.Add(x => x.Player, player));
 
@@ -27,7 +27,7 @@ public class PlayerCardTests : BunitContext
     [Fact]
     public void OmitsBackgroundLayer_WhenNoAvatar()
     {
-        var player = new PlayerDto(Guid.NewGuid(), "Bob", false, false, null, false, null);
+        var player = new PlayerResponse(Guid.NewGuid(), "Bob", false, false, null, false, null);
 
         var cut = Render<PlayerCard>(p => p.Add(x => x.Player, player));
 
@@ -37,7 +37,7 @@ public class PlayerCardTests : BunitContext
     [Fact]
     public void HidesCardValue_BeforeReveal_ButShowsPickedIndicator()
     {
-        var player = new PlayerDto(Guid.NewGuid(), "Alice", false, false, null, true, null);
+        var player = new PlayerResponse(Guid.NewGuid(), "Alice", false, false, null, true, null);
 
         var cut = Render<PlayerCard>(p => p.Add(x => x.Player, player));
 
@@ -48,7 +48,7 @@ public class PlayerCardTests : BunitContext
     [Fact]
     public void ShowsCardValue_AfterReveal()
     {
-        var player = new PlayerDto(Guid.NewGuid(), "Alice", false, false, null, true, new CardOptionDto(2, 2, "2"));
+        var player = new PlayerResponse(Guid.NewGuid(), "Alice", false, false, null, true, new CardOptionResponse(2, 2, "2"));
 
         var cut = Render<PlayerCard>(p => p.Add(x => x.Player, player));
 
@@ -58,7 +58,7 @@ public class PlayerCardTests : BunitContext
     [Fact]
     public void ShowsSpectatorBadge_ForSpectators()
     {
-        var player = new PlayerDto(Guid.NewGuid(), "Carol", true, false, null, false, null);
+        var player = new PlayerResponse(Guid.NewGuid(), "Carol", true, false, null, false, null);
 
         var cut = Render<PlayerCard>(p => p.Add(x => x.Player, player));
 
@@ -68,7 +68,7 @@ public class PlayerCardTests : BunitContext
     [Fact]
     public void OmitsRemoveButton_WhenCanRemoveIsFalse()
     {
-        var player = new PlayerDto(Guid.NewGuid(), "Alice", false, false, null, false, null);
+        var player = new PlayerResponse(Guid.NewGuid(), "Alice", false, false, null, false, null);
 
         var cut = Render<PlayerCard>(p => p
             .Add(x => x.Player, player)
@@ -81,7 +81,7 @@ public class PlayerCardTests : BunitContext
     public void ClickingRemove_InvokesOnRemove_WhenConfirmed()
     {
         JSInterop.SetupModule("./js/interop.js").Setup<bool>("confirmAction", _ => true).SetResult(true);
-        var player = new PlayerDto(Guid.NewGuid(), "Alice", false, false, null, false, null);
+        var player = new PlayerResponse(Guid.NewGuid(), "Alice", false, false, null, false, null);
         var removed = false;
 
         var cut = Render<PlayerCard>(p => p
@@ -98,7 +98,7 @@ public class PlayerCardTests : BunitContext
     public void ClickingRemove_DoesNotInvokeOnRemove_WhenNotConfirmed()
     {
         JSInterop.SetupModule("./js/interop.js").Setup<bool>("confirmAction", _ => true).SetResult(false);
-        var player = new PlayerDto(Guid.NewGuid(), "Alice", false, false, null, false, null);
+        var player = new PlayerResponse(Guid.NewGuid(), "Alice", false, false, null, false, null);
         var removed = false;
 
         var cut = Render<PlayerCard>(p => p

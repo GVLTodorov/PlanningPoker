@@ -1,3 +1,3 @@
-namespace PlanningPoker.Contracts;
+﻿namespace PlanningPoker.Contracts;
 
-public sealed record DeckDto(DeckType DeckType, string DisplayName, IReadOnlyList<CardOptionDto> Cards);
+public sealed record DeckResponse(DeckType DeckType, string DisplayName, IReadOnlyList<CardOptionResponse> Cards);

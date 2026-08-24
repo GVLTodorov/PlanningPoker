@@ -88,7 +88,8 @@ under `src/`, one folder per project, split along dependency lines:
 
 ```
 src/PlanningPoker.Infrastructure/     Domain rules (Room/Player/Deck, no ASP.NET dependency) + wire
-                                       DTOs and the JSON source-gen context, shared by Api and Client
+                                       request/response models and the JSON source-gen context,
+                                       shared by Api and Client
 src/PlanningPoker.Api/                Minimal API + SignalR hub + Giphy client; hosts the Client's
                                        output
 src/PlanningPoker.Client/             Blazor WebAssembly frontend

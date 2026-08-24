@@ -1,4 +1,4 @@
-using PlanningPoker.Api.Giphy;
+﻿using PlanningPoker.Api.Giphy;
 using PlanningPoker.Api.Mapping;
 using PlanningPoker.Contracts;
 using PlanningPoker.Contracts.Requests;
@@ -30,7 +30,7 @@ public static class RoomEndpoints
                     "That room name is already taken or has no usable characters for a room link. Try a different name.");
             }
 
-            return Results.Created($"/api/rooms/{room.Id.Value}", room.ToSummaryDto());
+            return Results.Created($"/api/rooms/{room.Id.Value}", room.ToSummaryResponse());
         });
 
         group.MapGet("/rooms/{roomId}", (string roomId, IRoomRepository rooms) =>
@@ -40,13 +40,13 @@ public static class RoomEndpoints
                 return Results.NotFound();
             }
 
-            return Results.Ok(room.ToSummaryDto());
+            return Results.Ok(room.ToSummaryResponse());
         });
 
         group.MapGet("/decks", () =>
         {
             var decks = DeckCatalog.AllTypes
-                .Select(type => new DeckDto(
+                .Select(type => new DeckResponse(
                     type.ToContract(),
                     DeckCatalog.GetDisplayName(type),
                     DeckCatalog.Get(type).Select(card => card.ToContract()).ToList()))

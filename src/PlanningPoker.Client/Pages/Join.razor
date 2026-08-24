@@ -1,4 +1,4 @@
-@page "/{RoomId}/join"
+﻿@page "/{RoomId}/join"
 @inject RoomApiClient RoomApi
 @inject PlayerSessionState Session
 @inject NavigationManager Navigation
@@ -33,7 +33,7 @@
     [Parameter]
     public string RoomId { get; set; } = string.Empty;
 
-    private RoomSummaryDto? _room;
+    private RoomSummaryResponse? _room;
     private bool _notFound;
     private string _playerName = string.Empty;
     private string? _avatarUrl;

@@ -1,4 +1,4 @@
-@page "/{RoomId}"
+﻿@page "/{RoomId}"
 @implements IAsyncDisposable
 @using Microsoft.AspNetCore.SignalR
 @inject PlayerSessionState Session
@@ -78,15 +78,15 @@
     public string RoomId { get; set; } = string.Empty;
 
     private GameHubClient? _hub;
-    private RoomStateDto? _state;
+    private RoomStateResponse? _state;
     private bool _notFound;
     private Guid _playerId;
-    private IReadOnlyList<DeckDto> _decks = [];
+    private IReadOnlyList<DeckResponse> _decks = [];
     private bool _linkCopied;
     private int? _myCardIndex;
     private IJSObjectReference? _jsModule;
 
-    private IReadOnlyList<CardOptionDto> CurrentDeck =>
+    private IReadOnlyList<CardOptionResponse> CurrentDeck =>
         _decks.FirstOrDefault(d => d.DeckType == _state?.DeckType)?.Cards ?? [];
 
     private string CurrentDeckSummary =>
@@ -128,7 +128,7 @@
         // everything -- instead of us reappearing as a brand new joiner. See GameHub.JoinRoom.
         var existingPlayerId = Session.RoomId == RoomId ? Session.PlayerId : null;
 
-        JoinRoomResult result;
+        JoinRoomResponse result;
         try
         {
             result = await _hub.JoinRoomAsync(
@@ -150,7 +150,7 @@
         await Session.SaveAsync();
     }
 
-    private void OnRoomStateChanged(RoomStateDto state)
+    private void OnRoomStateChanged(RoomStateResponse state)
     {
         _state = state;
         InvokeAsync(StateHasChanged);
@@ -190,7 +190,7 @@
         InvokeAsync(StateHasChanged);
     }
 
-    private static bool IsUnanimous(IReadOnlyList<PlayerDto> players)
+    private static bool IsUnanimous(IReadOnlyList<PlayerResponse> players)
     {
         var votes = players.Where(p => !p.IsSpectator && p.Card is not null).Select(p => p.Card!.Value).Distinct().ToList();
         return votes.Count == 1;

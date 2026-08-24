@@ -1,8 +1,8 @@
-namespace PlanningPoker.Contracts;
+﻿namespace PlanningPoker.Contracts;
 
-public sealed record RoomStateDto(
+public sealed record RoomStateResponse(
     string RoomId,
     string Name,
     DeckType DeckType,
     RoundStatus Status,
-    IReadOnlyList<PlayerDto> Players);
+    IReadOnlyList<PlayerResponse> Players);

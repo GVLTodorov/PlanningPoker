@@ -1,4 +1,4 @@
-<label class="field">
+﻿<label class="field">
     <span class="field-label">Deck</span>
     <select class="deck-select" value="@SelectedDeckType" @onchange="OnChanged">
         @foreach (var deck in Decks)
@@ -10,7 +10,7 @@
 
 @code {
     [Parameter, EditorRequired]
-    public IReadOnlyList<DeckDto> Decks { get; set; } = [];
+    public IReadOnlyList<DeckResponse> Decks { get; set; } = [];
 
     [Parameter]
     public DeckType SelectedDeckType { get; set; }
@@ -18,7 +18,7 @@
     [Parameter]
     public EventCallback<DeckType> SelectedDeckTypeChanged { get; set; }
 
-    private static string FormatValues(DeckDto deck) => string.Join(", ", deck.Cards.Select(c => c.Label));
+    private static string FormatValues(DeckResponse deck) => string.Join(", ", deck.Cards.Select(c => c.Label));
 
     private Task OnChanged(ChangeEventArgs args)
     {

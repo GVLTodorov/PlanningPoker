@@ -1,4 +1,4 @@
-@page "/"
+﻿@page "/"
 @inject RoomApiClient RoomApi
 @inject PlayerSessionState Session
 @inject NavigationManager Navigation
@@ -54,7 +54,7 @@
     private string _playerName = string.Empty;
     private string? _avatarUrl;
     private IReadOnlyList<string> _avatarUrls = [];
-    private IReadOnlyList<DeckDto> _decks = [];
+    private IReadOnlyList<DeckResponse> _decks = [];
     private DeckType _deckType = DeckType.Fibonacci;
     private bool _isSpectator;
     private bool _isCreating;

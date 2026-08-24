@@ -1,3 +1,3 @@
-namespace PlanningPoker.Contracts;
+﻿namespace PlanningPoker.Contracts;
 
-public sealed record CardOptionDto(int Index, double Value, string Label);
+public sealed record CardOptionResponse(int Index, double Value, string Label);

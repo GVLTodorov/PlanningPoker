@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.SignalR;
+﻿using Microsoft.AspNetCore.SignalR;
 using PlanningPoker.Api.Mapping;
 using PlanningPoker.Api.Realtime;
 using PlanningPoker.Contracts.Messages;
@@ -8,7 +8,7 @@ namespace PlanningPoker.Api.Hubs;
 
 /// <summary>
 /// Realtime surface for a room, one SignalR group per room. Most mutations broadcast a full
-/// <see cref="ContractMapper.ToStateDto"/> snapshot; <see cref="PickCard"/> is the exception — it's
+/// <see cref="ContractMapper.ToStateResponse"/> snapshot; <see cref="PickCard"/> is the exception — it's
 /// the hottest path (every pick/unpick fans out to every connected player), so it broadcasts only
 /// the <see cref="PlayerPickStatusChanged"/> diff.
 /// </summary>
@@ -31,7 +31,7 @@ public sealed class GameHub : Hub
         _hubContext = hubContext;
     }
 
-    public async Task<JoinRoomResult> JoinRoom(
+    public async Task<JoinRoomResponse> JoinRoom(
         string roomId, string playerName, bool isSpectator, string? avatarUrl, Guid? existingPlayerId = null)
     {
         var room = GetRoomOrThrow(roomId);
@@ -46,9 +46,9 @@ public sealed class GameHub : Hub
 
         await Groups.AddToGroupAsync(Context.ConnectionId, room.Id.Value);
 
-        await Clients.OthersInGroup(room.Id.Value).SendAsync("RoomStateChanged", room.ToStateDto());
+        await Clients.OthersInGroup(room.Id.Value).SendAsync("RoomStateChanged", room.ToStateResponse());
 
-        return new JoinRoomResult(player.Id, room.ToStateDto());
+        return new JoinRoomResponse(player.Id, room.ToStateResponse());
     }
 
     public Task LeaveRoom() => HandleDisconnectAsync();
@@ -127,7 +127,7 @@ public sealed class GameHub : Hub
             await Clients.Client(targetConnectionId).SendAsync("RemovedFromRoom");
         }
 
-        await Clients.Group(room.Id.Value).SendAsync("RoomStateChanged", room.ToStateDto());
+        await Clients.Group(room.Id.Value).SendAsync("RoomStateChanged", room.ToStateResponse());
     }
 
     private async Task HandleDisconnectAsync()
@@ -171,7 +171,7 @@ public sealed class GameHub : Hub
         }
         else
         {
-            await _hubContext.Clients.Group(roomId.Value).SendAsync("RoomStateChanged", room.ToStateDto());
+            await _hubContext.Clients.Group(roomId.Value).SendAsync("RoomStateChanged", room.ToStateResponse());
         }
     }
 
@@ -186,7 +186,7 @@ public sealed class GameHub : Hub
     }
 
     private async Task BroadcastStateAsync(Room room) =>
-        await Clients.Group(room.Id.Value).SendAsync("RoomStateChanged", room.ToStateDto());
+        await Clients.Group(room.Id.Value).SendAsync("RoomStateChanged", room.ToStateResponse());
 
     private Room GetRoomOrThrow(string roomId)
     {

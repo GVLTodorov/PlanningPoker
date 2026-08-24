@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using PlanningPoker.Contracts;
 using PlanningPoker.Contracts.Messages;
 using PlanningPoker.Contracts.Requests;
@@ -15,20 +15,20 @@ public class PlanningPokerJsonContextTests
     };
 
     [Fact]
-    public void RoomStateDto_RoundTrips()
+    public void RoomStateResponse_RoundTrips()
     {
-        var original = new RoomStateDto(
+        var original = new RoomStateResponse(
             "ABCD1234",
             "Sprint Planning",
             DeckType.Fibonacci,
             RoundStatus.Revealed,
             [
-                new PlayerDto(Guid.NewGuid(), "Alice", false, true, "https://example.test/a.gif", true, new CardOptionDto(2, 2, "2")),
-                new PlayerDto(Guid.NewGuid(), "Bob", true, false, null, false, null),
+                new PlayerResponse(Guid.NewGuid(), "Alice", false, true, "https://example.test/a.gif", true, new CardOptionResponse(2, 2, "2")),
+                new PlayerResponse(Guid.NewGuid(), "Bob", true, false, null, false, null),
             ]);
 
         var json = JsonSerializer.Serialize(original, Options);
-        var roundTripped = JsonSerializer.Deserialize<RoomStateDto>(json, Options);
+        var roundTripped = JsonSerializer.Deserialize<RoomStateResponse>(json, Options);
 
         // Record equality doesn't do sequence equality on IReadOnlyList properties, so round-trip
         // fidelity is asserted by re-serializing and comparing JSON rather than object equality.
@@ -47,14 +47,14 @@ public class PlanningPokerJsonContextTests
     }
 
     [Fact]
-    public void JoinRoomResult_RoundTrips()
+    public void JoinRoomResponse_RoundTrips()
     {
-        var original = new JoinRoomResult(
+        var original = new JoinRoomResponse(
             Guid.NewGuid(),
-            new RoomStateDto("ABCD1234", "Sprint Planning", DeckType.Powers, RoundStatus.Voting, []));
+            new RoomStateResponse("ABCD1234", "Sprint Planning", DeckType.Powers, RoundStatus.Voting, []));
 
         var json = JsonSerializer.Serialize(original, Options);
-        var roundTripped = JsonSerializer.Deserialize<JoinRoomResult>(json, Options);
+        var roundTripped = JsonSerializer.Deserialize<JoinRoomResponse>(json, Options);
 
         Assert.Equal(json, JsonSerializer.Serialize(roundTripped, Options));
     }
@@ -74,7 +74,7 @@ public class PlanningPokerJsonContextTests
     public void RoundRevealed_RoundTrips()
     {
         var original = new RoundRevealed(
-            [new PlayerDto(Guid.NewGuid(), "Alice", false, true, null, true, new CardOptionDto(0, 0, "0"))]);
+            [new PlayerResponse(Guid.NewGuid(), "Alice", false, true, null, true, new CardOptionResponse(0, 0, "0"))]);
 
         var json = JsonSerializer.Serialize(original, Options);
         var roundTripped = JsonSerializer.Deserialize<RoundRevealed>(json, Options);

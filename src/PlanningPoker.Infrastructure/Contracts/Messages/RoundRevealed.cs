@@ -1,3 +1,3 @@
-namespace PlanningPoker.Contracts.Messages;
+﻿namespace PlanningPoker.Contracts.Messages;
 
-public sealed record RoundRevealed(IReadOnlyList<PlayerDto> Players);
+public sealed record RoundRevealed(IReadOnlyList<PlayerResponse> Players);

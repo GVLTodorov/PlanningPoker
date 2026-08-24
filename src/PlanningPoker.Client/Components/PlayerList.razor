@@ -1,4 +1,4 @@
-<div class="player-list">
+﻿<div class="player-list">
     @foreach (var player in Players)
     {
         <PlayerCard @key="player.PlayerId" Player="player" IsLocalPlayer="@(player.PlayerId == LocalPlayerId)"
@@ -9,7 +9,7 @@
 
 @code {
     [Parameter, EditorRequired]
-    public IReadOnlyList<PlayerDto> Players { get; set; } = [];
+    public IReadOnlyList<PlayerResponse> Players { get; set; } = [];
 
     [Parameter]
     public Guid LocalPlayerId { get; set; }

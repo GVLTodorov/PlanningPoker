@@ -1,4 +1,4 @@
-using System.Net.Http.Json;
+﻿using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -39,14 +39,14 @@ public class GameHubTests : IClassFixture<PlanningPokerWebApplicationFactory>
         var createResponse = await client.PostAsJsonAsync(
             "/api/rooms", new CreateRoomRequest("Sprint Planning", DeckType.Fibonacci), JsonOptions);
         createResponse.EnsureSuccessStatusCode();
-        var room = await createResponse.Content.ReadFromJsonAsync<RoomSummaryDto>(JsonOptions);
+        var room = await createResponse.Content.ReadFromJsonAsync<RoomSummaryResponse>(JsonOptions);
         Assert.NotNull(room);
 
         await using var aliceConnection = CreateHubConnection();
         await using var bobConnection = CreateHubConnection();
 
-        var aliceStateChanges = new List<RoomStateDto>();
-        aliceConnection.On<RoomStateDto>("RoomStateChanged", state => aliceStateChanges.Add(state));
+        var aliceStateChanges = new List<RoomStateResponse>();
+        aliceConnection.On<RoomStateResponse>("RoomStateChanged", state => aliceStateChanges.Add(state));
 
         var alicePickChanges = new List<PlayerPickStatusChanged>();
         aliceConnection.On<PlayerPickStatusChanged>("PlayerPickStatusChanged", change => alicePickChanges.Add(change));
@@ -98,7 +98,7 @@ public class GameHubTests : IClassFixture<PlanningPokerWebApplicationFactory>
         using var client = _factory.CreateClient();
         var createResponse = await client.PostAsJsonAsync(
             "/api/rooms", new CreateRoomRequest("Reconnect Room", DeckType.Fibonacci), JsonOptions);
-        var room = await createResponse.Content.ReadFromJsonAsync<RoomSummaryDto>(JsonOptions);
+        var room = await createResponse.Content.ReadFromJsonAsync<RoomSummaryResponse>(JsonOptions);
 
         await using var aliceConnection = CreateHubConnection();
         await using var bobConnection = CreateHubConnection();
@@ -132,7 +132,7 @@ public class GameHubTests : IClassFixture<PlanningPokerWebApplicationFactory>
         using var client = _factory.CreateClient();
         var createResponse = await client.PostAsJsonAsync(
             "/api/rooms", new CreateRoomRequest("Empty Round", DeckType.Powers), JsonOptions);
-        var room = await createResponse.Content.ReadFromJsonAsync<RoomSummaryDto>(JsonOptions);
+        var room = await createResponse.Content.ReadFromJsonAsync<RoomSummaryResponse>(JsonOptions);
 
         await using var connection = CreateHubConnection();
         await connection.StartAsync();
@@ -147,7 +147,7 @@ public class GameHubTests : IClassFixture<PlanningPokerWebApplicationFactory>
         using var client = _factory.CreateClient();
         var createResponse = await client.PostAsJsonAsync(
             "/api/rooms", new CreateRoomRequest("Kick Room", DeckType.Fibonacci), JsonOptions);
-        var room = await createResponse.Content.ReadFromJsonAsync<RoomSummaryDto>(JsonOptions);
+        var room = await createResponse.Content.ReadFromJsonAsync<RoomSummaryResponse>(JsonOptions);
 
         await using var aliceConnection = CreateHubConnection();
         await using var bobConnection = CreateHubConnection();
@@ -155,8 +155,8 @@ public class GameHubTests : IClassFixture<PlanningPokerWebApplicationFactory>
         var bobWasRemoved = false;
         bobConnection.On("RemovedFromRoom", () => bobWasRemoved = true);
 
-        var aliceStateChanges = new List<RoomStateDto>();
-        aliceConnection.On<RoomStateDto>("RoomStateChanged", state => aliceStateChanges.Add(state));
+        var aliceStateChanges = new List<RoomStateResponse>();
+        aliceConnection.On<RoomStateResponse>("RoomStateChanged", state => aliceStateChanges.Add(state));
 
         await aliceConnection.StartAsync();
         await bobConnection.StartAsync();
@@ -178,7 +178,7 @@ public class GameHubTests : IClassFixture<PlanningPokerWebApplicationFactory>
         using var client = _factory.CreateClient();
         var createResponse = await client.PostAsJsonAsync(
             "/api/rooms", new CreateRoomRequest("Kick Rejection Room", DeckType.Fibonacci), JsonOptions);
-        var room = await createResponse.Content.ReadFromJsonAsync<RoomSummaryDto>(JsonOptions);
+        var room = await createResponse.Content.ReadFromJsonAsync<RoomSummaryResponse>(JsonOptions);
 
         await using var aliceConnection = CreateHubConnection();
         await using var bobConnection = CreateHubConnection();
@@ -200,7 +200,7 @@ public class GameHubTests : IClassFixture<PlanningPokerWebApplicationFactory>
         using var client = _factory.CreateClient();
         var createResponse = await client.PostAsJsonAsync(
             "/api/rooms", new CreateRoomRequest("Spectator Room", DeckType.Powers), JsonOptions);
-        var room = await createResponse.Content.ReadFromJsonAsync<RoomSummaryDto>(JsonOptions);
+        var room = await createResponse.Content.ReadFromJsonAsync<RoomSummaryResponse>(JsonOptions);
 
         await using var connection = CreateHubConnection();
         await connection.StartAsync();
@@ -214,10 +214,10 @@ public class GameHubTests : IClassFixture<PlanningPokerWebApplicationFactory>
     // parameters for a client that sends fewer arguments -- so every JoinRoom call needs all five,
     // even when existingPlayerId is just null. Centralized here so that's a one-line fact, not five
     // near-identical InvokeAsync calls each carrying their own trailing nulls.
-    private static Task<JoinRoomResult> JoinAsync(
+    private static Task<JoinRoomResponse> JoinAsync(
         HubConnection connection, string roomId, string playerName,
         bool isSpectator = false, Guid? existingPlayerId = null) =>
-        connection.InvokeAsync<JoinRoomResult>("JoinRoom", roomId, playerName, isSpectator, null, existingPlayerId);
+        connection.InvokeAsync<JoinRoomResponse>("JoinRoom", roomId, playerName, isSpectator, null, existingPlayerId);
 
     private HubConnection CreateHubConnection() =>
         new HubConnectionBuilder()
@@ -229,7 +229,7 @@ public class GameHubTests : IClassFixture<PlanningPokerWebApplicationFactory>
                 options.Transports = HttpTransportType.LongPolling;
             })
             // Must mirror the server's hub JSON options (Program.cs) so string-formatted enums
-            // round-trip correctly and plain (non-DTO) argument types like PickCard's int? still
+            // round-trip correctly and plain (non-model) argument types like PickCard's int? still
             // resolve instead of throwing NotSupportedException.
             .AddJsonProtocol(options => options.PayloadSerializerOptions = PlanningPokerJsonContext.CreateOptions())
             .Build();

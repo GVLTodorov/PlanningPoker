@@ -1,4 +1,4 @@
-// Small SignalR load-driver: spins up N rooms x M players, runs several pick/reveal/reset cycles
+﻿// Small SignalR load-driver: spins up N rooms x M players, runs several pick/reveal/reset cycles
 // per room concurrently, and reports p50/p95/max latency for the PickCard round trip -- the
 // hottest path in the app (every pick fans out to every connected player). Not gated in CI
 // (REQUIREMENTS.MD Section 10.3 explicitly allows that); run manually against a live instance:
@@ -31,7 +31,7 @@ var roomTasks = Enumerable.Range(0, roomCount).Select(async roomIndex =>
 {
     var createResponse = await httpClient.PostAsJsonAsync(
         "/api/rooms", new CreateRoomRequest($"Load {roomIndex}", DeckType.Fibonacci), jsonOptions);
-    var room = await createResponse.Content.ReadFromJsonAsync<RoomSummaryDto>(jsonOptions)
+    var room = await createResponse.Content.ReadFromJsonAsync<RoomSummaryResponse>(jsonOptions)
         ?? throw new InvalidOperationException("Room creation failed during load test setup.");
 
     var connections = new List<HubConnection>();

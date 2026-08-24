@@ -1,3 +1,3 @@
-namespace PlanningPoker.Contracts;
+﻿namespace PlanningPoker.Contracts;
 
-public sealed record RoomSummaryDto(string RoomId, string Name, DeckType DeckType);
+public sealed record RoomSummaryResponse(string RoomId, string Name, DeckType DeckType);

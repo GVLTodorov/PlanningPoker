@@ -1,4 +1,4 @@
-@inject IJSRuntime JsRuntime
+﻿@inject IJSRuntime JsRuntime
 
 <div class="player-card-wrapper @(Player.IsSpectator ? "player-card-spectator" : "")">
     <span class="player-card-name">@Player.Name</span>
@@ -39,7 +39,7 @@
 
 @code {
     [Parameter, EditorRequired]
-    public PlayerDto Player { get; set; } = null!;
+    public PlayerResponse Player { get; set; } = null!;
 
     [Parameter]
     public bool IsLocalPlayer { get; set; }

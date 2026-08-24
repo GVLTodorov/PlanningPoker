@@ -1,4 +1,4 @@
-@if (Voters.Count > 0)
+﻿@if (Voters.Count > 0)
 {
     <div class="vote-summary @AccentClass">
         <div class="vote-summary-groups">
@@ -28,9 +28,9 @@
 
 @code {
     [Parameter, EditorRequired]
-    public IReadOnlyList<PlayerDto> Players { get; set; } = [];
+    public IReadOnlyList<PlayerResponse> Players { get; set; } = [];
 
-    private List<PlayerDto> Voters =>
+    private List<PlayerResponse> Voters =>
         Players.Where(p => !p.IsSpectator && p.Card is not null).ToList();
 
     private List<VoteGroup> VoteGroups =>
