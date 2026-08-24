@@ -1,0 +1,71 @@
+name: Demo Hundred (Resource Usage)
+
+# Manual only: this drives 10 rooms x 10 players (100 real SignalR connections, no browsers) against
+# a live instance purely to see what PlanningPoker.Api itself costs in CPU/memory under sustained
+# concurrent load -- it produces a chart, not a recording, so it's kept separate from
+# demo-video.yml/demo-video-twelve.yml (those need a Giphy key and a browser; this needs neither).
+on:
+  workflow_dispatch:
+
+jobs:
+  measure:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Build
+        run: dotnet build PlanningPoker.slnx -c Release
+
+      # `dotnet build`'s output only serves static files (index.html, the Blazor framework files,
+      # css/js) via a manifest pointing back to source-tree intermediate paths -- fine for
+      # `dotnet run`, but running that DLL directly (as this job does) 404s on every static asset.
+      # `dotnet publish` bundles a real, portable wwwroot, same as the Dockerfile already does for
+      # the production image.
+      - name: Publish the app
+        run: dotnet publish src/PlanningPoker.Api/PlanningPoker.Api.csproj -c Release -o publish/api
+
+      - name: Start the app
+        env:
+          ASPNETCORE_URLS: http://localhost:6232
+        run: |
+          # ContentRootPath defaults to the process's working directory (the repo root here), not
+          # the published DLL's own folder, so WebRootPath resolves to <repo root>/wwwroot (doesn't
+          # exist) unless --contentRoot is given explicitly. It must be absolute: a relative value
+          # gets resolved against the DLL's base directory, not this shell's cwd, and silently
+          # doubles the path (confirmed locally: publish/api/publish/api).
+          dotnet publish/api/PlanningPoker.Api.dll --contentRoot "$GITHUB_WORKSPACE/publish/api" > api.log 2>&1 &
+          echo $! > api.pid
+          timeout 30 bash -c 'until curl -sf http://localhost:6232/healthz >/dev/null; do sleep 1; done'
+
+      - name: Run 10x10 load and sample resource usage
+        run: |
+          dotnet run --project src/PlanningPoker.Tests.Play.Hundred -c Release --no-build -- \
+            http://localhost:6232 "$(cat api.pid)" docs/hundred-resource-usage.svg 10 10 8
+
+      - name: Show app server log
+        if: always()
+        run: cat api.log || true
+
+      - name: Stop the app
+        if: always()
+        run: kill "$(cat api.pid)" || true
+
+      - name: Commit updated resource-usage chart
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/hundred-resource-usage.svg
+          if git diff --cached --quiet; then
+            echo "Resource-usage chart unchanged, nothing to commit."
+          else
+            git commit -m "chore: refresh 10x10 resource-usage chart"
+            git push
+          fi

@@ -20,6 +20,7 @@
 - [Tech stack](#tech-stack)
 - [Project structure](#project-structure)
 - [Testing](#testing)
+- [Performance](#performance)
 - [Configuration](#configuration)
 
 ## What is this?
@@ -101,6 +102,10 @@ src/PlanningPoker.Tests.Benchmarks/   BenchmarkDotNet: domain hot paths, JSON se
 src/PlanningPoker.Tests.LoadTest/     Console tool: N rooms x M players, reports pick/reveal latency
 src/PlanningPoker.Tests.Play/         Playwright: joins, picks, reveals, and resets a room through
                                        the real UI -- records the demo video above
+src/PlanningPoker.Tests.Play.Twelve/  Same as Play, scaled to 12 players -- records docs/twelve.gif
+src/PlanningPoker.Tests.Play.Hundred/ Console tool: 10 rooms x 10 players over real SignalR
+                                       connections (no browser), samples the API's own CPU/memory
+                                       while they vote -- draws docs/hundred-resource-usage.svg
 ```
 
 The Client depends only on Contracts — never Domain — so the browser bundle never ships
@@ -123,7 +128,25 @@ simulation (5 players join, vote, reveal, reset, and vote again). It's not part 
 run it manually against a live instance (`dotnet run --project PlanningPoker.Tests.Play -- http://localhost:6232`),
 or trigger the [Demo Video workflow](.github/workflows/demo-video.yml) from the Actions tab to
 regenerate and commit `docs/demo.gif`. That workflow needs `GIPHY_API_BASE_URL`/`GIPHY_API_QUERY`
-configured as repo secrets to show real gifs.
+configured as repo secrets to show real gifs. The same pattern, scaled to 12 players, is the
+[Demo Video (Twelve Players) workflow](.github/workflows/demo-video-twelve.yml), producing
+`docs/twelve.gif`.
+
+## Performance
+
+![PlanningPoker.Api CPU and memory while 10 rooms of 10 players vote concurrently.](docs/hundred-resource-usage.svg)
+
+`PlanningPoker.Tests.Play.Hundred` drives 10 rooms x 10 players (100 real SignalR connections, no
+browsers) voting at a human pace — each room's pick/reveal/reset round takes 15-20 wall-clock
+seconds, with picks landing at random moments rather than all at once — while sampling
+`PlanningPoker.Api`'s own CPU% and working-set memory. It exists purely to see what the app costs
+under sustained concurrent load. Trigger the
+[Demo Hundred workflow](.github/workflows/demo-hundred.yml) from the Actions tab to regenerate and
+commit the chart above, or run it manually against a live instance:
+
+```bash
+dotnet run --project PlanningPoker.Tests.Play.Hundred -- http://localhost:6232 <api-pid> docs/hundred-resource-usage.svg
+```
 
 ## Configuration
 
