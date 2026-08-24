@@ -150,13 +150,69 @@ dotnet run --project PlanningPoker.Tests.Play.Hundred -- http://localhost:6232 <
 
 ## Configuration
 
-Two optional environment variables enable the Giphy integration (avatar picker + reveal gifs). If
-either is unset, those features simply don't render — nothing else breaks.
+Two optional environment variables enable the Giphy integration (the avatar picker). If either is
+unset, avatars simply don't render — nothing else breaks.
 
 | Variable              | Example                                                                |
 |------------------------|-------------------------------------------------------------------------|
 | `GIPHY_API_BASE_URL`   | `https://api.giphy.com/v1/gifs/trending?api_key=YOUR_GIPHY_API_KEY`    |
 | `GIPHY_API_QUERY`      | `limit=10&offset=0&rating=g&lang=en`                                   |
 
-Never commit a real Giphy API key — set it only as an environment variable at deploy time (see
-[docker-compose.yml](docker-compose.yml) for a placeholder example).
+`GIPHY_API_BASE_URL` must point at `.../trending`, not `.../search` — see the gotcha noted in
+[REQUIREMENTS.MD Section 4.3](REQUIREMENTS.MD#43-operational-endpoints).
+
+### Getting a Giphy API key
+
+1. Create a free account at [developers.giphy.com](https://developers.giphy.com).
+2. From the [dashboard](https://developers.giphy.com/dashboard/), click **Create an App** → pick
+   the free **API** (not SDK) option, and give it any name.
+3. Copy the generated API key into `GIPHY_API_BASE_URL` as shown above.
+
+Never commit a real Giphy API key — set it only as an environment variable at deploy time.
+
+### Running it with Docker Compose
+
+[docker-compose.yml](docker-compose.yml) at the repo root is the minimal, portable example — build
+locally, no reverse proxy required:
+
+```yaml
+services:
+  planningpoker:
+    image: ghcr.io/gvltodorov/planningpoker:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: planningpoker
+    restart: unless-stopped
+    ports:
+      - 8140:8080
+    environment:
+      - GIPHY_API_BASE_URL=https://api.giphy.com/v1/gifs/trending?api_key=YOUR_GIPHY_API_KEY
+      - GIPHY_API_QUERY=limit=10&offset=0&rating=g&lang=en
+```
+
+Behind a reverse proxy (this is how the live instance at
+[poker.devspace.tech](https://poker.devspace.tech) actually runs — Traefik terminating TLS and
+routing by hostname), drop the `ports` mapping and add routing labels instead:
+
+```yaml
+services:
+  planningpoker:
+    image: ghcr.io/gvltodorov/planningpoker:latest
+    container_name: planningpoker
+    restart: unless-stopped
+    environment:
+      - GIPHY_API_BASE_URL=https://api.giphy.com/v1/gifs/trending?api_key=YOUR_GIPHY_API_KEY
+      - GIPHY_API_QUERY=limit=10&offset=0&rating=g&lang=en
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.planningpoker.rule=Host(`poker.example.com`)"
+      - "traefik.http.routers.planningpoker.entrypoints=https"
+      - "traefik.http.routers.planningpoker.tls.certresolver=myresolver"
+    networks:
+      - proxy
+
+networks:
+  proxy:
+    external: true
+```
