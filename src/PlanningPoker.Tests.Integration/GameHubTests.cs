@@ -60,10 +60,8 @@ public class GameHubTests : IClassFixture<PlanningPokerWebApplicationFactory>
         await aliceConnection.StartAsync();
         await bobConnection.StartAsync();
 
-        var aliceJoin = await aliceConnection.InvokeAsync<JoinRoomResult>(
-            "JoinRoom", room!.RoomId, "Alice", false, null);
-        var bobJoin = await bobConnection.InvokeAsync<JoinRoomResult>(
-            "JoinRoom", room.RoomId, "Bob", false, null);
+        var aliceJoin = await JoinAsync(aliceConnection, room!.RoomId, "Alice");
+        var bobJoin = await JoinAsync(bobConnection, room.RoomId, "Bob");
 
         Assert.Equal(2, bobJoin.State.Players.Count);
 
@@ -95,6 +93,40 @@ public class GameHubTests : IClassFixture<PlanningPokerWebApplicationFactory>
     }
 
     [Fact]
+    public async Task JoinRoom_WithExistingPlayerId_ReclaimsHostStatus_AfterReconnect()
+    {
+        using var client = _factory.CreateClient();
+        var createResponse = await client.PostAsJsonAsync(
+            "/api/rooms", new CreateRoomRequest("Reconnect Room", DeckType.Fibonacci), JsonOptions);
+        var room = await createResponse.Content.ReadFromJsonAsync<RoomSummaryDto>(JsonOptions);
+
+        await using var aliceConnection = CreateHubConnection();
+        await using var bobConnection = CreateHubConnection();
+
+        await aliceConnection.StartAsync();
+        await bobConnection.StartAsync();
+
+        var aliceJoin = await JoinAsync(aliceConnection, room!.RoomId, "Alice");
+        await JoinAsync(bobConnection, room.RoomId, "Bob");
+        Assert.True(aliceJoin.State.Players.Single(p => p.PlayerId == aliceJoin.PlayerId).IsHost);
+
+        // Simulates a page refresh: the old connection drops (no explicit LeaveRoom -- a refresh
+        // just tears down the socket) and a brand new connection rejoins with the same player id
+        // while the room still has another player in it. Without the disconnect grace period plus
+        // existingPlayerId reuse, Alice would come back as a fresh, non-host player here -- exactly
+        // the bug this test guards against.
+        await aliceConnection.StopAsync();
+
+        await using var aliceReconnection = CreateHubConnection();
+        await aliceReconnection.StartAsync();
+        var rejoin = await JoinAsync(aliceReconnection, room.RoomId, "Alice", existingPlayerId: aliceJoin.PlayerId);
+
+        Assert.Equal(aliceJoin.PlayerId, rejoin.PlayerId);
+        Assert.Equal(2, rejoin.State.Players.Count);
+        Assert.True(rejoin.State.Players.Single(p => p.PlayerId == aliceJoin.PlayerId).IsHost);
+    }
+
+    [Fact]
     public async Task Reveal_Throws_WhenNoPlayersHavePicked()
     {
         using var client = _factory.CreateClient();
@@ -104,7 +136,7 @@ public class GameHubTests : IClassFixture<PlanningPokerWebApplicationFactory>
 
         await using var connection = CreateHubConnection();
         await connection.StartAsync();
-        await connection.InvokeAsync<JoinRoomResult>("JoinRoom", room!.RoomId, "Solo", false, null);
+        await JoinAsync(connection, room!.RoomId, "Solo");
 
         await Assert.ThrowsAsync<HubException>(() => connection.InvokeAsync("Reveal"));
     }
@@ -129,8 +161,8 @@ public class GameHubTests : IClassFixture<PlanningPokerWebApplicationFactory>
         await aliceConnection.StartAsync();
         await bobConnection.StartAsync();
 
-        var aliceJoin = await aliceConnection.InvokeAsync<JoinRoomResult>("JoinRoom", room!.RoomId, "Alice", false, null);
-        var bobJoin = await bobConnection.InvokeAsync<JoinRoomResult>("JoinRoom", room.RoomId, "Bob", false, null);
+        var aliceJoin = await JoinAsync(aliceConnection, room!.RoomId, "Alice");
+        var bobJoin = await JoinAsync(bobConnection, room.RoomId, "Bob");
 
         await aliceConnection.InvokeAsync("RemovePlayer", bobJoin.PlayerId);
 
@@ -154,8 +186,8 @@ public class GameHubTests : IClassFixture<PlanningPokerWebApplicationFactory>
         await aliceConnection.StartAsync();
         await bobConnection.StartAsync();
 
-        var aliceJoin = await aliceConnection.InvokeAsync<JoinRoomResult>("JoinRoom", room!.RoomId, "Alice", false, null);
-        await bobConnection.InvokeAsync<JoinRoomResult>("JoinRoom", room.RoomId, "Bob", false, null);
+        var aliceJoin = await JoinAsync(aliceConnection, room!.RoomId, "Alice");
+        await JoinAsync(bobConnection, room.RoomId, "Bob");
 
         var ex = await Assert.ThrowsAsync<HubException>(
             () => bobConnection.InvokeAsync("RemovePlayer", aliceJoin.PlayerId));
@@ -172,11 +204,20 @@ public class GameHubTests : IClassFixture<PlanningPokerWebApplicationFactory>
 
         await using var connection = CreateHubConnection();
         await connection.StartAsync();
-        await connection.InvokeAsync<JoinRoomResult>("JoinRoom", room!.RoomId, "Watcher", true, null);
+        await JoinAsync(connection, room!.RoomId, "Watcher", isSpectator: true);
 
         var ex = await Assert.ThrowsAsync<HubException>(() => connection.InvokeAsync("PickCard", 0));
         Assert.Contains("spectator", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
+
+    // SignalR's hub dispatcher requires the exact declared arity -- it does NOT fill in C# optional
+    // parameters for a client that sends fewer arguments -- so every JoinRoom call needs all five,
+    // even when existingPlayerId is just null. Centralized here so that's a one-line fact, not five
+    // near-identical InvokeAsync calls each carrying their own trailing nulls.
+    private static Task<JoinRoomResult> JoinAsync(
+        HubConnection connection, string roomId, string playerName,
+        bool isSpectator = false, Guid? existingPlayerId = null) =>
+        connection.InvokeAsync<JoinRoomResult>("JoinRoom", roomId, playerName, isSpectator, null, existingPlayerId);
 
     private HubConnection CreateHubConnection() =>
         new HubConnectionBuilder()

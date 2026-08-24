@@ -59,7 +59,7 @@ dotnet run --project PlanningPoker.Api
 ```
 
 This builds the Blazor client, hosts it as static files, and serves the API/real-time hub from the
-same process. Open the URL printed in the console (e.g. `http://localhost:5232`).
+same process. Open the URL printed in the console (e.g. `http://localhost:6232`).
 
 Debugging from VS Code: open the repo folder and press **F5** — [.vscode/launch.json](.vscode/launch.json)
 is already wired up to build and launch `PlanningPoker.Api`.
@@ -119,7 +119,7 @@ size check in CI) are run separately and don't gate every commit — see REQUIRE
 
 The demo video above is produced by `PlanningPoker.Tests.Play`, a Playwright-driven browser
 simulation (5 players join, vote, reveal, reset, and vote again). It's not part of `dotnet test` —
-run it manually against a live instance (`dotnet run --project PlanningPoker.Tests.Play -- http://localhost:5232`),
+run it manually against a live instance (`dotnet run --project PlanningPoker.Tests.Play -- http://localhost:6232`),
 or trigger the [Demo Video workflow](.github/workflows/demo-video.yml) from the Actions tab to
 regenerate and commit `docs/demo.gif`. That workflow needs `GIPHY_API_BASE_URL`/`GIPHY_API_QUERY`
 configured as repo secrets to show real gifs.

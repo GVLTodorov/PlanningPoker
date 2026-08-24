@@ -1,12 +1,19 @@
 @page "/{RoomId}"
 @implements IAsyncDisposable
+@using Microsoft.AspNetCore.SignalR
 @inject PlayerSessionState Session
 @inject NavigationManager Navigation
 @inject RoomApiClient RoomApi
 @inject IJSRuntime JsRuntime
 
 <section class="screen board-screen">
-    @if (_state is null)
+    @if (_notFound)
+    {
+        <h1>Room not found</h1>
+        <p>This room may have ended. Double-check the link, or start a new one.</p>
+        <a class="primary-button" href="/">Create a new room</a>
+    }
+    else if (_state is null)
     {
         <p>Connecting…</p>
     }
@@ -18,28 +25,28 @@
                     <img src="favicon.svg" alt="" class="home-icon" />
                 </a>
                 <h1>@_state.Name</h1>
+                <button type="button" class="copy-link-button" @onclick="CopyInviteLinkAsync"
+                        title="@(_linkCopied ? "Link copied!" : "Copy invite link")"
+                        aria-label="@(_linkCopied ? "Link copied!" : "Copy invite link")">
+                    @if (_linkCopied)
+                    {
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                             aria-hidden="true">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    }
+                    else
+                    {
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                             aria-hidden="true">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                    }
+                </button>
             </div>
-            <button type="button" class="secondary-button icon-button" @onclick="CopyInviteLinkAsync"
-                    title="@(_linkCopied ? "Link copied!" : "Copy invite link")"
-                    aria-label="@(_linkCopied ? "Link copied!" : "Copy invite link")">
-                @if (_linkCopied)
-                {
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                         aria-hidden="true">
-                        <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                }
-                else
-                {
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                         aria-hidden="true">
-                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                    </svg>
-                }
-            </button>
         </header>
 
         <div class="field">
@@ -49,15 +56,17 @@
 
         <PlayerList Players="_state.Players" LocalPlayerId="_playerId" IsHost="IsHost" OnRemovePlayer="RemovePlayerAsync" />
 
-        @if (_state.Status == RoundStatus.Revealed)
-        {
-            <VoteSummary Players="_state.Players" />
-        }
-        else
-        {
-            <HandSelector Deck="CurrentDeck" SelectedCardIndex="_myCardIndex" Disabled="@Session.IsSpectator"
-                          SelectedCardIndexChanged="PickCardAsync" />
-        }
+        @* Both panels stay mounted, stacked in the same grid cell, so whichever is taller sets the
+           row height regardless of which one is visible -- the reveal button below never jumps. *@
+        <div class="board-main-panel">
+            <div class="board-main-panel-layer @(_state.Status != RoundStatus.Revealed ? "" : "board-main-panel-hidden")">
+                <HandSelector Deck="CurrentDeck" SelectedCardIndex="_myCardIndex" Disabled="@Session.IsSpectator"
+                              SelectedCardIndexChanged="PickCardAsync" />
+            </div>
+            <div class="board-main-panel-layer @(_state.Status == RoundStatus.Revealed ? "" : "board-main-panel-hidden")">
+                <VoteSummary Players="_state.Players" />
+            </div>
+        </div>
 
         <RevealResetButton Status="_state.Status" CanReveal="CanReveal" IsHost="IsHost" OnReveal="RevealAsync"
                            OnReset="ResetAsync" />
@@ -70,6 +79,7 @@
 
     private GameHubClient? _hub;
     private RoomStateDto? _state;
+    private bool _notFound;
     private Guid _playerId;
     private IReadOnlyList<DeckDto> _decks = [];
     private bool _linkCopied;
@@ -112,9 +122,32 @@
         _hub.RemovedFromRoom += OnRemovedFromRoom;
 
         await _hub.StartAsync();
-        var result = await _hub.JoinRoomAsync(RoomId, Session.PlayerName, Session.IsSpectator, Session.AvatarUrl);
+
+        // If we already joined this exact room before (a refresh, not a fresh visit), pass that
+        // player id along so the server reclaims the same identity -- host status, current pick,
+        // everything -- instead of us reappearing as a brand new joiner. See GameHub.JoinRoom.
+        var existingPlayerId = Session.RoomId == RoomId ? Session.PlayerId : null;
+
+        JoinRoomResult result;
+        try
+        {
+            result = await _hub.JoinRoomAsync(
+                RoomId, Session.PlayerName, Session.IsSpectator, Session.AvatarUrl, existingPlayerId);
+        }
+        catch (HubException)
+        {
+            // Most likely a link to a room that has since ended -- rooms live in memory only, so an
+            // old link outlives a server restart or the room's natural cleanup after it emptied out.
+            _notFound = true;
+            return;
+        }
+
         _playerId = result.PlayerId;
         _state = result.State;
+
+        Session.RoomId = RoomId;
+        Session.PlayerId = _playerId;
+        await Session.SaveAsync();
     }
 
     private void OnRoomStateChanged(RoomStateDto state)
@@ -189,6 +222,8 @@
     {
         Session.PlayerName = string.Empty;
         Session.AvatarUrl = null;
+        Session.RoomId = null;
+        Session.PlayerId = null;
         InvokeAsync(async () =>
         {
             await Session.SaveAsync();

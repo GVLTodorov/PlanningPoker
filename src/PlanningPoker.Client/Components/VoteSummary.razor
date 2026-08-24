@@ -1,15 +1,17 @@
 @if (Voters.Count > 0)
 {
-    <div class="vote-summary">
+    <div class="vote-summary @AccentClass">
         <div class="vote-summary-groups">
             @foreach (var group in VoteGroups)
             {
-                <div class="vote-summary-group">
+                <div class="vote-summary-group @(group.Count == MaxVoteCount ? "vote-summary-group-leading" : "")">
                     <span class="vote-summary-card">@group.Label</span>
                     <span class="vote-summary-count">@group.Count @(group.Count == 1 ? "Vote" : "Votes")</span>
                 </div>
             }
         </div>
+
+        <div class="vote-summary-divider"></div>
 
         <div class="vote-summary-stats">
             <div class="vote-summary-stat">
@@ -40,7 +42,9 @@
 
     private double Average => Voters.Count > 0 ? Voters.Average(p => p.Card!.Value) : 0;
 
-    private double Agreement => Voters.Count > 0 ? VoteGroups.Max(g => g.Count) / (double)Voters.Count : 0;
+    private int MaxVoteCount => VoteGroups.Count > 0 ? VoteGroups.Max(g => g.Count) : 0;
+
+    private double Agreement => Voters.Count > 0 ? MaxVoteCount / (double)Voters.Count : 0;
 
     private string AgreementClass => Agreement switch
     {
@@ -48,6 +52,10 @@
         < 0.7 => "vote-summary-agreement-medium",
         _ => "vote-summary-agreement-high",
     };
+
+    // Drives the panel's top accent bar so the reveal reads as "strong/weak consensus" at a glance,
+    // mirroring the agreement stat's color without duplicating its threshold logic.
+    private string AccentClass => AgreementClass.Replace("vote-summary-agreement-", "vote-summary-accent-");
 
     private sealed record VoteGroup(string Label, int Count);
 }

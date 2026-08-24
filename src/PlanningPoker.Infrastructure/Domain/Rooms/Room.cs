@@ -24,13 +24,27 @@ public sealed class Room
         DeckType = deckType;
     }
 
-    /// <summary>The first player to join an empty room becomes its host.</summary>
-    public Player AddPlayer(string name, bool isSpectator, string? avatarUrl)
+    /// <summary>
+    /// The first player to join an empty room becomes its host. If <paramref name="existingPlayerId"/>
+    /// still identifies a player currently in this room -- a reconnect (e.g. a page refresh) whose old
+    /// connection hasn't been swept yet -- that player's identity is reused instead of minting a new
+    /// one, so a reconnecting host doesn't lose host status, and a reconnecting player doesn't lose
+    /// their pick, just because their old connection is still draining.
+    /// </summary>
+    public Player AddPlayer(string name, bool isSpectator, string? avatarUrl, Guid? existingPlayerId = null)
     {
         lock (_lock)
         {
+            if (existingPlayerId is { } id && _players.TryGetValue(id, out var existing))
+            {
+                existing.Name = name;
+                existing.IsSpectator = isSpectator;
+                existing.AvatarUrl = avatarUrl;
+                return existing;
+            }
+
             var isHost = _players.Count == 0;
-            var player = new Player(Guid.NewGuid(), name, isSpectator, isHost, avatarUrl);
+            var player = new Player(existingPlayerId ?? Guid.NewGuid(), name, isSpectator, isHost, avatarUrl);
             _players[player.Id] = player;
             return player;
         }

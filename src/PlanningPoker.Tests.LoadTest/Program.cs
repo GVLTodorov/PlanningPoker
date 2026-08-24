@@ -3,7 +3,7 @@
 // hottest path in the app (every pick fans out to every connected player). Not gated in CI
 // (REQUIREMENTS.MD Section 10.3 explicitly allows that); run manually against a live instance:
 //
-//   dotnet run --project PlanningPoker.Tests.LoadTest -c Release -- http://localhost:5232 20 5 10
+//   dotnet run --project PlanningPoker.Tests.LoadTest -c Release -- http://localhost:6232 20 5 10
 
 using System.Collections.Concurrent;
 using System.Diagnostics;
@@ -14,7 +14,7 @@ using PlanningPoker.Contracts;
 using PlanningPoker.Contracts.Requests;
 using PlanningPoker.Contracts.Serialization;
 
-var baseUrl = args.Length > 0 ? args[0] : "http://localhost:5232";
+var baseUrl = args.Length > 0 ? args[0] : "http://localhost:6232";
 var roomCount = args.Length > 1 ? int.Parse(args[1]) : 20;
 var playersPerRoom = args.Length > 2 ? int.Parse(args[2]) : 5;
 var cyclesPerRoom = args.Length > 3 ? int.Parse(args[3]) : 10;
@@ -43,7 +43,7 @@ var roomTasks = Enumerable.Range(0, roomCount).Select(async roomIndex =>
             .Build();
 
         await connection.StartAsync();
-        await connection.InvokeAsync<object>("JoinRoom", room.RoomId, $"Bot{roomIndex}-{p}", false, null);
+        await connection.InvokeAsync<object>("JoinRoom", room.RoomId, $"Bot{roomIndex}-{p}", false, null, null);
         connections.Add(connection);
     }
 

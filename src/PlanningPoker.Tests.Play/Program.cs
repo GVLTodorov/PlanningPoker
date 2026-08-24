@@ -5,12 +5,12 @@
 // a stuck flow surfaces as a Playwright TimeoutException and a non-zero exit code: this doubles as
 // a live smoke test of join/pick/reveal/reset, not just a video-generation script.
 //
-//   dotnet run --project PlanningPoker.Tests.Play -c Release -- http://localhost:5232 artifacts/demo-video
+//   dotnet run --project PlanningPoker.Tests.Play -c Release -- http://localhost:6232 artifacts/demo-video
 
 using Microsoft.Playwright;
 using PlanningPoker.Tests.Play;
 
-var baseUrl = args.Length > 0 ? args[0] : "http://localhost:5232";
+var baseUrl = args.Length > 0 ? args[0] : "http://localhost:6232";
 var outputDir = args.Length > 1 ? args[1] : "artifacts/demo-video";
 
 Directory.CreateDirectory(outputDir);

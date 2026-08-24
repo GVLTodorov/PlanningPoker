@@ -28,6 +28,15 @@ public sealed class PlayerSessionState
 
     public bool IsSpectator { get; set; }
 
+    /// <summary>Room the stored <see cref="PlayerId"/> belongs to, so it's only reused for a refresh of
+    /// that same room -- not carried over if the tab later visits a different one.</summary>
+    public string? RoomId { get; set; }
+
+    /// <summary>Set once the board page successfully joins a room, so a page refresh can rejoin as this
+    /// same player (see <c>GameHub.JoinRoom</c>'s <c>existingPlayerId</c>) instead of appearing as a
+    /// brand new one -- which is what was silently costing a refreshing host their host status.</summary>
+    public Guid? PlayerId { get; set; }
+
     public async Task RestoreAsync()
     {
         if (!string.IsNullOrWhiteSpace(PlayerName))
@@ -51,17 +60,20 @@ public sealed class PlayerSessionState
         PlayerName = stored.PlayerName;
         AvatarUrl = stored.AvatarUrl;
         IsSpectator = stored.IsSpectator;
+        RoomId = stored.RoomId;
+        PlayerId = stored.PlayerId;
     }
 
     public async Task SaveAsync()
     {
         var module = await GetModuleAsync();
-        var json = JsonSerializer.Serialize(new StoredSession(PlayerName, AvatarUrl, IsSpectator));
+        var json = JsonSerializer.Serialize(new StoredSession(PlayerName, AvatarUrl, IsSpectator, RoomId, PlayerId));
         await module.InvokeVoidAsync("saveSessionItem", StorageKey, json);
     }
 
     private async Task<IJSObjectReference> GetModuleAsync() =>
         _jsModule ??= await _jsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/interop.js");
 
-    private sealed record StoredSession(string PlayerName, string? AvatarUrl, bool IsSpectator);
+    private sealed record StoredSession(
+        string PlayerName, string? AvatarUrl, bool IsSpectator, string? RoomId, Guid? PlayerId);
 }

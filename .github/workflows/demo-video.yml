@@ -37,7 +37,7 @@ jobs:
 
       - name: Start the app
         env:
-          ASPNETCORE_URLS: http://localhost:5232
+          ASPNETCORE_URLS: http://localhost:6232
           GIPHY_API_BASE_URL: ${{ secrets.GIPHY_API_BASE_URL }}
           GIPHY_API_QUERY: ${{ secrets.GIPHY_API_QUERY }}
         run: |
@@ -48,14 +48,14 @@ jobs:
           # doubles the path (confirmed locally: publish/api/publish/api).
           dotnet publish/api/PlanningPoker.Api.dll --contentRoot "$GITHUB_WORKSPACE/publish/api" > api.log 2>&1 &
           echo $! > api.pid
-          timeout 30 bash -c 'until curl -sf http://localhost:5232/healthz >/dev/null; do sleep 1; done'
+          timeout 30 bash -c 'until curl -sf http://localhost:6232/healthz >/dev/null; do sleep 1; done'
 
       - name: Record demo
         id: record
         run: |
           mkdir -p artifacts/demo-video
           dotnet run --project src/PlanningPoker.Tests.Play -c Release --no-build -- \
-            http://localhost:5232 artifacts/demo-video | tee artifacts/demo-video.log
+            http://localhost:6232 artifacts/demo-video | tee artifacts/demo-video.log
           video_path=$(grep -oP '(?<=^VIDEO_PATH=).+' artifacts/demo-video.log)
           echo "webm_path=$video_path" >> "$GITHUB_OUTPUT"
 

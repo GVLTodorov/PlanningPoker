@@ -14,7 +14,9 @@
     --color-text: #12291a;
     --color-text-muted: #4b6355;
     --color-danger: #b3261e;
+    --color-danger-tint: #fbe4e2;
     --color-warning: #b8860b;
+    --color-warning-tint: #fbead0;
     --space-1: 0.5rem;
     --space-2: 0.75rem;
     --space-3: 1rem;
@@ -22,6 +24,8 @@
     --space-5: 2rem;
     --radius: 0.75rem;
     --touch-target: 3rem;
+    --shadow-card: 0 1px 3px rgba(13, 63, 32, 0.12);
+    --shadow-panel: 0 6px 20px rgba(13, 63, 32, 0.1);
 }
 
 * {
@@ -241,7 +245,6 @@ a {
 .board-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     gap: var(--space-3);
     flex-wrap: wrap;
     margin-bottom: var(--space-4);
@@ -267,6 +270,31 @@ a {
     width: 2.5rem;
     height: 2.5rem;
     display: block;
+}
+
+/* Ghost icon button: sits right next to the room name instead of stranded at the far
+   end of the header, but keeps the same touch-target footprint for tap-friendliness. */
+.copy-link-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--touch-target);
+    height: var(--touch-target);
+    padding: 0;
+    border: none;
+    border-radius: var(--radius);
+    background: transparent;
+    color: var(--color-green-700);
+    cursor: pointer;
+}
+
+.copy-link-button:hover {
+    background: var(--color-green-100);
+}
+
+.copy-link-button:focus-visible {
+    outline: 3px solid var(--color-green-600);
+    outline-offset: 2px;
 }
 
 .player-list {
@@ -433,6 +461,23 @@ a {
     color: var(--color-text-muted);
 }
 
+/* Main panel: HandSelector and VoteSummary stay stacked in the same grid cell so the taller of
+   the two sets the row height no matter which one is showing -- see Board.razor. */
+
+.board-main-panel {
+    display: grid;
+}
+
+.board-main-panel-layer {
+    grid-column: 1;
+    grid-row: 1;
+}
+
+.board-main-panel-hidden {
+    visibility: hidden;
+    pointer-events: none;
+}
+
 /* Hand selector */
 
 .hand-selector {
@@ -480,6 +525,8 @@ a {
 /* Vote summary */
 
 .vote-summary {
+    position: relative;
+    overflow: hidden;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -490,6 +537,46 @@ a {
     padding: var(--space-3);
     background: var(--color-surface-muted);
     border-radius: var(--radius);
+    box-shadow: var(--shadow-panel);
+}
+
+/* Top accent bar: color reflects how strong the consensus is, at a glance. */
+.vote-summary::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 4px;
+    background: var(--color-green-600);
+}
+
+.vote-summary-accent-low::before {
+    background: var(--color-danger);
+}
+
+.vote-summary-accent-medium::before {
+    background: var(--color-warning);
+}
+
+.vote-summary-accent-high::before {
+    background: var(--color-green-600);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .vote-summary {
+        animation: vote-summary-reveal 0.35s ease-out;
+    }
+}
+
+@keyframes vote-summary-reveal {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .vote-summary-groups {
@@ -511,18 +598,39 @@ a {
     justify-content: center;
     min-width: 3.5rem;
     min-height: 5rem;
-    font-size: 1.25rem;
-    font-weight: 700;
+    font-size: 1.5rem;
+    font-weight: 800;
     border-radius: var(--radius);
     border: 2px solid var(--color-green-400);
     background: var(--color-surface);
     color: var(--color-green-800);
+    box-shadow: var(--shadow-card);
+    transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
+}
+
+/* The most-picked estimate(s) get a glow ring, so the "winner" reads instantly. */
+.vote-summary-group-leading .vote-summary-card {
+    border-color: var(--color-green-600);
+    box-shadow: 0 0 0 4px var(--color-green-100), var(--shadow-card);
+    transform: translateY(-2px);
 }
 
 .vote-summary-count {
     font-size: 0.85rem;
     font-weight: 700;
     color: var(--color-text);
+}
+
+.vote-summary-divider {
+    align-self: stretch;
+    width: 1px;
+    background: var(--color-green-200);
+}
+
+@media (max-width: 640px) {
+    .vote-summary-divider {
+        display: none;
+    }
 }
 
 .vote-summary-stats {
@@ -543,27 +651,40 @@ a {
     justify-content: center;
     min-width: 3.5rem;
     min-height: 5rem;
+    padding: 0 var(--space-2);
     font-size: 1.5rem;
     font-weight: 800;
+    border-radius: var(--radius);
+    border: 2px solid var(--color-green-200);
+    background: var(--color-surface);
     color: var(--color-text);
+    box-shadow: var(--shadow-card);
 }
 
 .vote-summary-stat-label {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
     color: var(--color-text-muted);
 }
 
 .vote-summary-agreement-low {
     color: var(--color-danger);
+    border-color: var(--color-danger);
+    background: var(--color-danger-tint);
 }
 
 .vote-summary-agreement-medium {
     color: var(--color-warning);
+    border-color: var(--color-warning);
+    background: var(--color-warning-tint);
 }
 
 .vote-summary-agreement-high {
-    color: var(--color-green-600);
+    color: var(--color-green-700);
+    border-color: var(--color-green-600);
+    background: var(--color-green-100);
 }
 
 /* Framework infrastructure (unchanged behavior, restyled to match the palette) */

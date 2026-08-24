@@ -14,26 +14,36 @@ namespace PlanningPoker.Api.Hubs;
 /// </summary>
 public sealed class GameHub : Hub
 {
-    // A page refresh briefly drops the only connection to a room before the reload's JoinRoom call
-    // lands a moment later -- deleting the room the instant it empties would race a delete against
-    // that rejoin. This grace window comfortably covers a WASM cold-boot-and-reconnect cycle.
-    private static readonly TimeSpan EmptyRoomGracePeriod = TimeSpan.FromSeconds(15);
-
     private readonly IRoomRepository _rooms;
     private readonly IPlayerConnectionTracker _connections;
+    private readonly GameHubTimingOptions _timing;
+    private readonly IHubContext<GameHub> _hubContext;
 
-    public GameHub(IRoomRepository rooms, IPlayerConnectionTracker connections)
+    public GameHub(
+        IRoomRepository rooms,
+        IPlayerConnectionTracker connections,
+        GameHubTimingOptions timing,
+        IHubContext<GameHub> hubContext)
     {
         _rooms = rooms;
         _connections = connections;
+        _timing = timing;
+        _hubContext = hubContext;
     }
 
-    public async Task<JoinRoomResult> JoinRoom(string roomId, string playerName, bool isSpectator, string? avatarUrl)
+    public async Task<JoinRoomResult> JoinRoom(
+        string roomId, string playerName, bool isSpectator, string? avatarUrl, Guid? existingPlayerId = null)
     {
         var room = GetRoomOrThrow(roomId);
-        var player = room.AddPlayer(playerName, isSpectator, avatarUrl);
 
-        _connections.Track(Context.ConnectionId, room.Id, player.Id);
+        // Track the connection under the target player id *before* touching room state, so a
+        // concurrent PlayerReconnectGracePeriod sweep can never observe "reclaimed in Room, but not
+        // yet tracked as connected" and remove the player out from under this very rejoin.
+        var playerId = existingPlayerId ?? Guid.NewGuid();
+        _connections.Track(Context.ConnectionId, room.Id, playerId);
+
+        var player = room.AddPlayer(playerName, isSpectator, avatarUrl, playerId);
+
         await Groups.AddToGroupAsync(Context.ConnectionId, room.Id.Value);
 
         await Clients.OthersInGroup(room.Id.Value).SendAsync("RoomStateChanged", room.ToStateDto());
@@ -130,25 +140,44 @@ public sealed class GameHub : Hub
         _connections.Remove(Context.ConnectionId);
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, info.RoomId.Value);
 
-        if (!_rooms.TryGet(info.RoomId, out var room) || room is null)
+        // Don't remove the player yet -- give a reconnect (JoinRoom with this same player id) a
+        // chance to land first and reclaim their spot, instead of racing a removal against it.
+        _ = RemovePlayerIfStillDisconnectedAfterDelayAsync(info.RoomId, info.PlayerId);
+    }
+
+    // Runs well after the JoinRoom/disconnect invocation that scheduled it has returned, so it must
+    // not touch this instance's Clients/Groups/Context -- those are only valid for the lifetime of
+    // the triggering hub method call. _hubContext (a real singleton, not tied to any one invocation)
+    // is the supported way to broadcast from background work like this.
+    private async Task RemovePlayerIfStillDisconnectedAfterDelayAsync(RoomId roomId, Guid playerId)
+    {
+        await Task.Delay(_timing.PlayerReconnectGracePeriod);
+
+        if (_connections.TryGetConnectionId(roomId, playerId, out _))
+        {
+            // A new connection claimed this player id in the meantime -- they reconnected.
+            return;
+        }
+
+        if (!_rooms.TryGet(roomId, out var room) || room is null)
         {
             return;
         }
 
-        var isNowEmpty = room.RemovePlayer(info.PlayerId);
+        var isNowEmpty = room.RemovePlayer(playerId);
         if (isNowEmpty)
         {
-            _ = RemoveIfStillEmptyAfterDelayAsync(info.RoomId);
+            _ = RemoveIfStillEmptyAfterDelayAsync(roomId);
         }
         else
         {
-            await Clients.Group(info.RoomId.Value).SendAsync("RoomStateChanged", room.ToStateDto());
+            await _hubContext.Clients.Group(roomId.Value).SendAsync("RoomStateChanged", room.ToStateDto());
         }
     }
 
     private async Task RemoveIfStillEmptyAfterDelayAsync(RoomId roomId)
     {
-        await Task.Delay(EmptyRoomGracePeriod);
+        await Task.Delay(_timing.EmptyRoomGracePeriod);
 
         if (_rooms.TryGet(roomId, out var room) && room is not null && room.IsEmpty)
         {

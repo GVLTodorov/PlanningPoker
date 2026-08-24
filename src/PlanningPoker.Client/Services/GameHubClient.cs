@@ -36,8 +36,10 @@ public sealed class GameHubClient : IAsyncDisposable
 
     public Task StartAsync(CancellationToken cancellationToken = default) => _connection.StartAsync(cancellationToken);
 
-    public Task<JoinRoomResult> JoinRoomAsync(string roomId, string playerName, bool isSpectator, string? avatarUrl) =>
-        _connection.InvokeAsync<JoinRoomResult>("JoinRoom", roomId, playerName, isSpectator, avatarUrl);
+    public Task<JoinRoomResult> JoinRoomAsync(
+        string roomId, string playerName, bool isSpectator, string? avatarUrl, Guid? existingPlayerId = null) =>
+        _connection.InvokeAsync<JoinRoomResult>(
+            "JoinRoom", roomId, playerName, isSpectator, avatarUrl, existingPlayerId);
 
     public Task LeaveRoomAsync() => _connection.InvokeAsync("LeaveRoom");
 

@@ -27,6 +27,7 @@ namespace PlanningPoker.Contracts.Serialization;
 [JsonSerializable(typeof(PlayerPickStatusChanged))]
 [JsonSerializable(typeof(RoundRevealed))]
 [JsonSerializable(typeof(int?))]
+[JsonSerializable(typeof(Guid?))]
 public partial class PlanningPokerJsonContext : JsonSerializerContext
 {
     /// <summary>

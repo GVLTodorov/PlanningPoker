@@ -71,6 +71,63 @@ public class RoomTests
     }
 
     [Fact]
+    public void AddPlayer_WithExistingPlayerId_ReusesTheSamePlayer_PreservingHostStatus()
+    {
+        var room = NewRoom();
+        var alice = room.AddPlayer("Alice", isSpectator: false, avatarUrl: null);
+        room.AddPlayer("Bob", isSpectator: false, avatarUrl: null);
+
+        // Simulates Alice (the host) refreshing while her old connection hasn't been swept yet --
+        // the room is not empty (Bob is still there), so without identity reuse this would come back
+        // isHost: false, exactly the bug this rejoin path exists to prevent.
+        var rejoined = room.AddPlayer("Alice", isSpectator: false, avatarUrl: null, existingPlayerId: alice.Id);
+
+        Assert.Equal(alice.Id, rejoined.Id);
+        Assert.True(rejoined.IsHost);
+        Assert.Equal(2, room.GetState().Count);
+    }
+
+    [Fact]
+    public void AddPlayer_WithExistingPlayerId_PreservesPickedCard()
+    {
+        var room = NewRoom();
+        var alice = room.AddPlayer("Alice", isSpectator: false, avatarUrl: null);
+        room.PickCard(alice.Id, 2);
+
+        var rejoined = room.AddPlayer("Alice", isSpectator: false, avatarUrl: null, existingPlayerId: alice.Id);
+
+        Assert.True(rejoined.HasPicked);
+    }
+
+    [Fact]
+    public void AddPlayer_WithExistingPlayerId_UpdatesNameAvatarAndSpectatorFlag()
+    {
+        var room = NewRoom();
+        var alice = room.AddPlayer("Alice", isSpectator: false, avatarUrl: "old.png");
+
+        var rejoined = room.AddPlayer(
+            "Alice B.", isSpectator: true, avatarUrl: "new.png", existingPlayerId: alice.Id);
+
+        Assert.Equal("Alice B.", rejoined.Name);
+        Assert.True(rejoined.IsSpectator);
+        Assert.Equal("new.png", rejoined.AvatarUrl);
+    }
+
+    [Fact]
+    public void AddPlayer_WithExistingPlayerId_ThatIsNoLongerInTheRoom_JoinsAsNewPlayer()
+    {
+        var room = NewRoom();
+        var goneId = Guid.NewGuid();
+
+        // Grace period already elapsed and the old player was swept -- this id means nothing anymore,
+        // so it must behave exactly like a fresh join (including normal first-joiner-is-host rules).
+        var player = room.AddPlayer("Alice", isSpectator: false, avatarUrl: null, existingPlayerId: goneId);
+
+        Assert.Equal(goneId, player.Id);
+        Assert.True(player.IsHost);
+    }
+
+    [Fact]
     public void SetSpectator_ClearsHand_WhenBecomingSpectator()
     {
         var room = NewRoom();

@@ -34,6 +34,7 @@ else
 
 builder.Services.AddSingleton<IRoomRepository, InMemoryRoomRepository>();
 builder.Services.AddSingleton<IPlayerConnectionTracker, PlayerConnectionTracker>();
+builder.Services.AddSingleton<GameHubTimingOptions>();
 
 builder.Services
     .AddSignalR(options => options.AddFilter<GameRuleExceptionHubFilter>())
