@@ -8,7 +8,7 @@ namespace PlanningPoker.Api.Hubs;
 
 /// <summary>
 /// Realtime surface for a room, one SignalR group per room. Most mutations broadcast a full
-/// <see cref="ContractMapper.ToStateResponse"/> snapshot; <see cref="PickCard"/> is the exception — it's
+/// <see cref="ContractExtensions.ToStateResponse"/> snapshot; <see cref="PickCard"/> is the exception — it's
 /// the hottest path (every pick/unpick fans out to every connected player), so it broadcasts only
 /// the <see cref="PlayerPickStatusChanged"/> diff.
 /// </summary>
@@ -99,7 +99,7 @@ public sealed class GameHub : Hub
         // client-side.
         room.Reveal(playerId);
 
-        var revealed = new RoundRevealed(room.GetState().Select(p => p.ToContract()).ToList());
+        var revealed = new RoundRevealed(room.GetState().Select(p => p.ToPlayerResponse()).ToList());
 
         await Clients.Group(room.Id.Value).SendAsync("RoundRevealed", revealed);
     }

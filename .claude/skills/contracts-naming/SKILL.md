@@ -44,7 +44,7 @@ ever show up nested (`RoomStateResponse.Players`, `PlayerResponse.Card`, `DeckRe
 ## Why uniform, not just real bodies
 
 The Domain layer already has its own `Player` (`PlanningPoker.Domain.Rooms.Player`) and
-`CardOption` (`PlanningPoker.Domain.Decks.CardOption`). `ContractMapper.cs` maps between the two
+`CardOption` (`PlanningPoker.Domain.Decks.CardOption`). `ContractExtensions.cs` maps between the two
 layers in the same file, and already has to alias-import the domain side to keep them apart:
 
 ```csharp
@@ -53,7 +53,7 @@ using DomainPlayerView = PlanningPoker.Domain.Rooms.PlayerView;
 ```
 
 Naming the contract side `CardOptionResponse`/`PlayerResponse` — instead of bare `CardOption`/
-`Player` — is what keeps `ContractMapper.cs` (and anywhere else that touches both layers) from
+`Player` — is what keeps `ContractExtensions.cs` (and anywhere else that touches both layers) from
 needing an alias on *both* sides. Bare nested-type names would just move the collision, not remove
 it. If you're tempted to drop the suffix on a "just a field, not really a response" type, check
 whether the Domain layer has a same-named class first — it usually does.
@@ -76,3 +76,22 @@ folder split by request-vs-response was never part of this convention, only the 
 (`Room`, `Player`, `CardOption`, `PlayerView`) with no `Request`/`Response` suffix at all — those
 aren't wire models, they're the domain's own vocabulary. This convention applies only to
 `PlanningPoker.Contracts`.
+
+## Domain → Contract mapping methods: name each conversion, don't overload `ToContract()`
+
+`ContractExtensions.cs` (`PlanningPoker.Api/Mapping/`) used to have four overloads of a single
+generic `ToContract()` name, distinguished only by parameter type — readable at the call site
+(`x.ToContract()`) but not at the declaration, and easy to reach for the wrong overload by accident.
+Each conversion now has its own specific name instead:
+
+| Converts | Method |
+|---|---|
+| Domain `DeckType` → contract `DeckType` | `ToDeckType()` |
+| Domain `RoundStatus` → contract `RoundStatus` | `ToRoundStatus()` |
+| Domain `CardOption` → `CardOptionResponse` | `ToCardOptionResponse()` |
+| Domain `PlayerView` → `PlayerResponse` | `ToPlayerResponse()` |
+
+Follow this for any new Domain → Contract conversion: name the extension method after what it
+*returns*, not a generic `ToContract`/`ToDto`/`ToModel`. The reverse direction (contract → domain,
+currently just `ToDomain(this DeckType)`) stays generic only because there's exactly one overload of
+it — if a second contract → domain conversion is ever added, split both into specific names then too.

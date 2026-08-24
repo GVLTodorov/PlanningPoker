@@ -47,9 +47,9 @@ public static class RoomEndpoints
         {
             var decks = DeckCatalog.AllTypes
                 .Select(type => new DeckResponse(
-                    type.ToContract(),
+                    type.ToDeckType(),
                     DeckCatalog.GetDisplayName(type),
-                    DeckCatalog.Get(type).Select(card => card.ToContract()).ToList()))
+                    DeckCatalog.Get(type).Select(card => card.ToCardOptionResponse()).ToList()))
                 .ToList();
 
             return Results.Ok(decks);
