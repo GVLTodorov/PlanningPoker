@@ -432,14 +432,12 @@ a {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 1.7rem;
-    height: 1.7rem;
+    width: 2.5rem;
+    height: 2.5rem;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.92);
+    background: rgba(255, 255, 255, 0.95);
     box-shadow: 0 1px 3px rgba(13, 63, 32, 0.35);
-    font-size: 1.05rem;
-    font-weight: 700;
-    color: var(--color-green-700);
+    color: var(--color-green-800);
 }
 
 .player-card-waiting {
@@ -466,6 +464,16 @@ a {
 
 .board-main-panel {
     display: grid;
+    /* Lives here, once, instead of on .hand-selector/.vote-summary individually -- CSS Grid's auto
+       row sizing uses a grid item's margin box, so if each layer carried its own top/bottom margin
+       the taller layer's margin would inflate the row even when that layer is the hidden one,
+       reintroducing a jump despite the min-height below. */
+    margin: var(--space-4) 0;
+    /* VoteSummary renders nothing at all until there's a vote to show, so during voting the grid
+       has nothing from that (hidden) layer to size against -- this floor is what still reserves
+       its eventual height so revealing doesn't grow the row and shove the button down a beat
+       later. Sized to VoteSummary's actual rendered content height, not a round number. */
+    min-height: 8.55rem;
 }
 
 .board-main-panel-layer {
@@ -486,8 +494,6 @@ a {
     align-items: center;
     align-content: center;
     gap: var(--space-2);
-    margin: var(--space-4) 0;
-    min-height: 8.5rem;
 }
 
 .hand-card {
@@ -532,8 +538,6 @@ a {
     align-items: center;
     justify-content: space-between;
     gap: var(--space-4);
-    margin: var(--space-4) 0;
-    min-height: 8.5rem;
     padding: var(--space-3);
     background: var(--color-surface-muted);
     border-radius: var(--radius);
