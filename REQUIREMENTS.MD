@@ -200,7 +200,21 @@ planningpoker:
    excluded from the "everyone has picked" reveal gate in step 2. A
    spectator can still be the host (spectator and host are independent —
    e.g. a facilitator who never estimates but still drives reveal/reset).
-6. A room isn't deleted the instant it empties. A page refresh briefly
+6. On reveal, a **vote summary panel** replaces the hand selector in the
+   same panel area (both stay mounted, stacked layers in the same grid
+   cell, so whichever is visible never changes the row height / makes the
+   Reveal/Reset button jump). It shows: every distinct picked value grouped
+   with its vote count (highest value first), the numeric **average** of
+   all non-spectator picks, and an **agreement percentage** (the largest
+   group's share of total votes), with a low/medium/high color treatment on
+   both the agreement stat and the panel's top accent bar. Spectators and
+   players who didn't pick are excluded from all three calculations.
+7. If every non-spectator's revealed pick is the **same value** (unanimous),
+   a **confetti burst** fires over the board (mirrors the celebration the
+   reference app fires on unanimous agreement; respects
+   `prefers-reduced-motion`). Purely decorative — it doesn't gate or delay
+   anything else in the reveal.
+8. A room isn't deleted the instant it empties. A page refresh briefly
    drops the only open connection before the reload's rejoin lands a moment
    later; deleting on the first disconnect would race that rejoin against
    the delete. The last player leaving starts a short grace window (server
@@ -238,14 +252,19 @@ the join screen and asking them to re-enter everything. Scoped to
 within the same tab but doesn't linger indefinitely across unrelated future
 visits once the tab closes.
 
-### 5.7 Room/player rename (backend-only, no UI)
+### 5.7 Room/player rename, mid-room spectator toggle (backend-only, no UI)
 
-The hub supports renaming a room (`RenameRoom`) and renaming a player
-in-room (`SetPlayerName`), and the client has wrapper methods for both
-(`GameHubClient.RenameRoomAsync` / `SetPlayerNameAsync`). Neither is
-currently exposed anywhere in the UI — there's no button or field that
-calls them. This is a known gap, not a deliberate scope decision either
-way; building the UI for one or both is a candidate for future work.
+The hub supports renaming a room (`RenameRoom`), renaming a player in-room
+(`SetPlayerName`), and toggling a player's spectator status after they've
+already joined (`SetSpectator` — distinct from the spectator checkbox on
+the create/join forms in [5.1](#51-workflow-a--home-screen-create-a-room)/
+[5.2](#52-workflow-b--joining-via-a-shared-link), which only sets the
+initial value). The client has wrapper methods for all three
+(`GameHubClient.RenameRoomAsync` / `SetPlayerNameAsync` /
+`SetSpectatorAsync`). None is currently exposed anywhere in the UI —
+there's no button or field that calls them. This is a known gap, not a
+deliberate scope decision either way; building the UI for any of the three
+is a candidate for future work.
 
 ## 6. Giphy Integration
 
@@ -338,6 +357,26 @@ has no way to show avatars at all.
   so the product has a real visual identity (used in the README header, and
   as the favicon / Blazor app icon). Style should reflect the green, friendly
   visual language described in [Section 7](#7-visual-design).
+
+### 9.1 SEO & social metadata
+
+`wwwroot/index.html` carries a full metadata layer for the public-facing
+deployment, not just a bare `<title>`:
+
+- A descriptive `<title>` and `<meta name="description">`/`keywords`
+  targeting agile-estimation search terms, plus `<link rel="canonical">`
+  pointing at the live deployment URL.
+- Open Graph (`og:*`) and Twitter Card (`twitter:*`) tags so a shared room
+  link renders a real preview card (title, description, image) instead of a
+  bare URL when pasted into Slack/social apps. The preview image is the same
+  SVG icon/logo referenced above.
+- A `WebApplication` JSON-LD (`application/ld+json`) block describing the
+  app as a free `BusinessApplication` for search engines.
+- `wwwroot/robots.txt` (allow all, points at the sitemap) and
+  `wwwroot/sitemap.xml` (single-URL sitemap for the root page).
+- A commented-out Google Analytics (GA4) snippet with a placeholder
+  Measurement ID — inert until someone creates a GA4 property and swaps in
+  a real ID; not wired up by default.
 
 ## 10. Performance
 

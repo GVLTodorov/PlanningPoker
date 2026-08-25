@@ -37,7 +37,7 @@ against).
 - **Create or join a room** in seconds — a friendly room-name suggestion is generated for you, and
   joining via a shared link takes one form submit (Enter works, no extra click).
 - **Five decks** to estimate with: Fibonacci, Modified Fibonacci, Powers of 2, Trust Vote, and
-  T-Shirt Sizes — switch decks mid-session and the round resets automatically.
+  T-Shirt Sizes — picked once when the room is created and fixed for its lifetime.
 - **Real-time board**: see who has picked (without seeing their pick) until everyone reveals
   together. Reveal is only available once every non-spectator has picked, enforced by the server,
   not just a disabled button.
