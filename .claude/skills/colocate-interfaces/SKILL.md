@@ -64,8 +64,7 @@ public interface IThingService
 ## Precedent in this repo
 
 - `InMemoryRoomRepository.cs` — merged from a standalone `IRoomRepository.cs` (single implementer).
-- `PlayerConnectionTracker.cs` — merged from a standalone `IPlayerConnectionTracker.cs` (single
-  implementer).
+- `PlayerTracker.cs` — merged from a standalone `IPlayerTracker.cs` (single implementer).
 - `IGiphyClient.cs` — deliberately **left standalone**: both `GiphyClient` and `NullGiphyClient`
   implement it, so there's no single file it belongs in. This mirrors Telegram's own
   `Service/Extension/IService.cs`, which is implemented by ~10 different command services and is

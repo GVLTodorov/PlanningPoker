@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.SignalR;
 
-namespace PlanningPoker.Api.Realtime;
+namespace PlanningPoker.Api.Hubs;
 
 /// <summary>
 /// Translates the built-in exception types Room.cs throws for expected game-rule violations
@@ -15,7 +15,7 @@ namespace PlanningPoker.Api.Realtime;
 /// methods are thin wrappers around it with no other realistic throw sources, which keeps that risk
 /// low in this app -- a deliberate tradeoff for not maintaining a separate custom exception hierarchy.
 /// </summary>
-public sealed class GameRuleExceptionHubFilter : IHubFilter
+public sealed class ExceptionHubFilter : IHubFilter
 {
     public async ValueTask<object?> InvokeMethodAsync(
         HubInvocationContext invocationContext, Func<HubInvocationContext, ValueTask<object?>> next)

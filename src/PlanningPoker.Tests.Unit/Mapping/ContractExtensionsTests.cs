@@ -1,4 +1,4 @@
-using PlanningPoker.Api.Mapping;
+using PlanningPoker.Api.Extensions;
 using PlanningPoker.Contracts;
 using Xunit;
 using DomainCardOption = PlanningPoker.Domain.Decks.CardOption;

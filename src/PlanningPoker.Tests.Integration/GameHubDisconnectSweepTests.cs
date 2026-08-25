@@ -13,9 +13,9 @@ namespace PlanningPoker.Tests.Integration;
 
 /// <summary>
 /// GameHub's two background sweeps (RemovePlayerIfStillDisconnectedAfterDelayAsync,
-/// RemoveIfStillEmptyAfterDelayAsync) only fire after PlanningPokerWebApplicationFactory's shortened
-/// 1-second grace periods elapse -- kept in their own file since these tests are meaningfully slower
-/// than the rest of the suite (each one waits out at least one real grace period).
+/// RemoveIfStillEmptyAfterDelayAsync) only fire after ApiConstants' real 15-second grace periods
+/// elapse -- kept in their own file since these tests are meaningfully slower than the rest of the
+/// suite (each one waits out at least one real grace period).
 /// </summary>
 public class GameHubDisconnectSweepTests : IClassFixture<PlanningPokerWebApplicationFactory>
 {
@@ -48,10 +48,10 @@ public class GameHubDisconnectSweepTests : IClassFixture<PlanningPokerWebApplica
 
         await bobConnection.DisposeAsync();
 
-        // The factory shortens PlayerReconnectGracePeriod to 1s; wait comfortably past it for the
-        // sweep's own broadcast (the room is not empty afterward, so this exercises the "still has
-        // players" broadcast branch of RemovePlayerIfStillDisconnectedAfterDelayAsync).
-        await WaitUntilAsync(() => aliceStateChanges.Any(s => s.Players.Count == 1), timeoutMs: 5000);
+        // PlayerReconnectGracePeriod is 15s; wait comfortably past it for the sweep's own broadcast
+        // (the room is not empty afterward, so this exercises the "still has players" broadcast
+        // branch of RemovePlayerIfStillDisconnectedAfterDelayAsync).
+        await WaitUntilAsync(() => aliceStateChanges.Any(s => s.Players.Count == 1), timeoutMs: 20_000);
         Assert.Equal(aliceJoin.PlayerId, aliceStateChanges.Last().Players.Single().PlayerId);
     }
 
@@ -73,14 +73,14 @@ public class GameHubDisconnectSweepTests : IClassFixture<PlanningPokerWebApplica
 
         await bobConnection.DisposeAsync();
 
-        // Reconnect well inside the 1s grace period -- the sweep, once it does run, must find Bob's
-        // player id tracked again (by this new connection) and return without touching the room.
+        // Reconnect well inside the 15s grace period -- the sweep, once it does run, must find
+        // Bob's player id tracked again (by this new connection) and return without touching the room.
         await using var bobReconnection = CreateHubConnection();
         await bobReconnection.StartAsync();
         await JoinAsync(bobReconnection, room.RoomId, "Bob", existingPlayerId: bobJoin.PlayerId);
 
         // Wait past the original grace period, then confirm Bob is still present via a fresh query.
-        await Task.Delay(1500);
+        await Task.Delay(16_000);
         var stateResponse = await client.GetAsync($"/api/rooms/{room.RoomId}");
         stateResponse.EnsureSuccessStatusCode();
     }
@@ -99,8 +99,8 @@ public class GameHubDisconnectSweepTests : IClassFixture<PlanningPokerWebApplica
 
         await soloConnection.DisposeAsync();
 
-        // PlayerReconnectGracePeriod (1s) elapses, the room becomes empty, then
-        // EmptyRoomGracePeriod (another 1s) elapses before the room itself is deleted -- poll past
+        // PlayerReconnectGracePeriod (15s) elapses, the room becomes empty, then
+        // EmptyRoomGracePeriod (another 15s) elapses before the room itself is deleted -- poll past
         // both rather than a single fixed delay, to keep this robust against scheduling jitter.
         await WaitUntilAsync(
             async () =>
@@ -108,7 +108,7 @@ public class GameHubDisconnectSweepTests : IClassFixture<PlanningPokerWebApplica
                 var response = await client.GetAsync($"/api/rooms/{room.RoomId}");
                 return response.StatusCode == HttpStatusCode.NotFound;
             },
-            timeoutMs: 8000);
+            timeoutMs: 35_000);
     }
 
     private static Task<JoinRoomResponse> JoinAsync(

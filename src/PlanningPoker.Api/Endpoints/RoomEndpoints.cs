@@ -1,5 +1,5 @@
-﻿using PlanningPoker.Api.Giphy;
-using PlanningPoker.Api.Mapping;
+﻿using PlanningPoker.Api.Extensions;
+using PlanningPoker.Api.Giphy;
 using PlanningPoker.Contracts;
 using PlanningPoker.Contracts.Requests;
 using PlanningPoker.Domain.Rooms;

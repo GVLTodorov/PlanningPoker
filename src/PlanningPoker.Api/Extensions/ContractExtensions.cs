@@ -5,7 +5,7 @@ using DomainPlayerView = PlanningPoker.Domain.Rooms.PlayerView;
 using DomainRoom = PlanningPoker.Domain.Rooms.Room;
 using DomainRoundStatus = PlanningPoker.Domain.Rooms.RoundStatus;
 
-namespace PlanningPoker.Api.Mapping;
+namespace PlanningPoker.Api.Extensions;
 
 /// <summary>
 /// Explicit (non-cast) extension methods between Domain and Contracts types. The two

@@ -88,7 +88,8 @@ public class GameHubTests : IClassFixture<PlanningPokerWebApplicationFactory>
         await bobConnection.StopAsync();
         await bobConnection.DisposeAsync();
 
-        await WaitUntilAsync(() => aliceStateChanges.Any(s => s.Players.Count == 1));
+        // PlayerReconnectGracePeriod (ApiConstants) is 15s; wait comfortably past it.
+        await WaitUntilAsync(() => aliceStateChanges.Any(s => s.Players.Count == 1), timeoutMs: 20_000);
         Assert.Single(aliceStateChanges.Last(s => s.Players.Count <= 1).Players);
     }
 

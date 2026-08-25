@@ -79,7 +79,7 @@ aren't wire models, they're the domain's own vocabulary. This convention applies
 
 ## Domain → Contract mapping methods: name each conversion, don't overload `ToContract()`
 
-`ContractExtensions.cs` (`PlanningPoker.Api/Mapping/`) used to have four overloads of a single
+`ContractExtensions.cs` (`PlanningPoker.Api/Extensions/`) used to have four overloads of a single
 generic `ToContract()` name, distinguished only by parameter type — readable at the call site
 (`x.ToContract()`) but not at the declaration, and easy to reach for the wrong overload by accident.
 Each conversion now has its own specific name instead:

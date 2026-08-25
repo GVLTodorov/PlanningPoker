@@ -1,9 +1,9 @@
 using System.Collections.Concurrent;
 using PlanningPoker.Domain.Rooms;
 
-namespace PlanningPoker.Api.Realtime;
+namespace PlanningPoker.Api.Services;
 
-public sealed class PlayerConnectionTracker : IPlayerConnectionTracker
+public sealed class PlayerTracker : IPlayerTracker
 {
     private readonly ConcurrentDictionary<string, (RoomId RoomId, Guid PlayerId)> _connections = new();
 
@@ -36,7 +36,7 @@ public sealed class PlayerConnectionTracker : IPlayerConnectionTracker
 /// the caller to keep re-supplying the room id. No reconnect grace period: a dropped connection is
 /// simply forgotten, matching the reference implementation's session-scoped behavior.
 /// </summary>
-public interface IPlayerConnectionTracker
+public interface IPlayerTracker
 {
     void Track(string connectionId, RoomId roomId, Guid playerId);
 

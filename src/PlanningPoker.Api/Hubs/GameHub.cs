@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.SignalR;
-using PlanningPoker.Api.Mapping;
-using PlanningPoker.Api.Realtime;
+using PlanningPoker.Api.Extensions;
+using PlanningPoker.Api.Services;
 using PlanningPoker.Contracts.Messages;
 using PlanningPoker.Domain.Rooms;
 
@@ -15,19 +15,16 @@ namespace PlanningPoker.Api.Hubs;
 public sealed class GameHub : Hub
 {
     private readonly IRoomRepository _rooms;
-    private readonly IPlayerConnectionTracker _connections;
-    private readonly GameHubTimingOptions _timing;
+    private readonly IPlayerTracker _connections;
     private readonly IHubContext<GameHub> _hubContext;
 
     public GameHub(
         IRoomRepository rooms,
-        IPlayerConnectionTracker connections,
-        GameHubTimingOptions timing,
+        IPlayerTracker connections,
         IHubContext<GameHub> hubContext)
     {
         _rooms = rooms;
         _connections = connections;
-        _timing = timing;
         _hubContext = hubContext;
     }
 
@@ -94,7 +91,7 @@ public sealed class GameHub : Hub
         var (room, playerId) = GetTrackedRoomAndPlayer();
 
         // Throws UnauthorizedAccessException / InvalidOperationException (translated to
-        // HubException by GameRuleExceptionHubFilter) unless the caller is host and every
+        // HubException by ExceptionHubFilter) unless the caller is host and every
         // non-spectator has picked — enforced here, not just reflected as a disabled button
         // client-side.
         room.Reveal(playerId);
@@ -116,7 +113,7 @@ public sealed class GameHub : Hub
         var (room, hostPlayerId) = GetTrackedRoomAndPlayer();
 
         // Throws UnauthorizedAccessException (translated to HubException by
-        // GameRuleExceptionHubFilter) unless the caller is host — enforced here, not just reflected
+        // ExceptionHubFilter) unless the caller is host — enforced here, not just reflected
         // as a hidden button client-side.
         room.RemovePlayerAsHost(hostPlayerId, targetPlayerId);
 
@@ -151,7 +148,7 @@ public sealed class GameHub : Hub
     // is the supported way to broadcast from background work like this.
     private async Task RemovePlayerIfStillDisconnectedAfterDelayAsync(RoomId roomId, Guid playerId)
     {
-        await Task.Delay(_timing.PlayerReconnectGracePeriod);
+        await Task.Delay(ApiConstants.PlayerReconnectGracePeriod);
 
         if (_connections.TryGetConnectionId(roomId, playerId, out _))
         {
@@ -177,7 +174,7 @@ public sealed class GameHub : Hub
 
     private async Task RemoveIfStillEmptyAfterDelayAsync(RoomId roomId)
     {
-        await Task.Delay(_timing.EmptyRoomGracePeriod);
+        await Task.Delay(ApiConstants.EmptyRoomGracePeriod);
 
         if (_rooms.TryGet(roomId, out var room) && room is not null && room.IsEmpty)
         {

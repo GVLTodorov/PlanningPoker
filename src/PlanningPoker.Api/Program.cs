@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.SignalR;
 using PlanningPoker.Api.Endpoints;
 using PlanningPoker.Api.Giphy;
 using PlanningPoker.Api.Hubs;
-using PlanningPoker.Api.Realtime;
+using PlanningPoker.Api.Services;
 using PlanningPoker.Contracts.Serialization;
 using PlanningPoker.Domain.Rooms;
 
@@ -33,11 +33,10 @@ else
 }
 
 builder.Services.AddSingleton<IRoomRepository, InMemoryRoomRepository>();
-builder.Services.AddSingleton<IPlayerConnectionTracker, PlayerConnectionTracker>();
-builder.Services.AddSingleton<GameHubTimingOptions>();
+builder.Services.AddSingleton<IPlayerTracker, PlayerTracker>();
 
 builder.Services
-    .AddSignalR(options => options.AddFilter<GameRuleExceptionHubFilter>())
+    .AddSignalR(options => options.AddFilter<ExceptionHubFilter>())
     .AddJsonProtocol(options => options.PayloadSerializerOptions = PlanningPokerJsonContext.CreateOptions());
 
 builder.Services.ConfigureHttpJsonOptions(options =>
