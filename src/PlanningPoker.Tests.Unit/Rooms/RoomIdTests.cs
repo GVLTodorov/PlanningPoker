@@ -63,4 +63,25 @@ public class RoomIdTests
         Assert.True(parsed);
         Assert.Equal(60, roomId.Value.Length);
     }
+
+    [Fact]
+    public void TryParse_SuppressesLeadingHyphen_WhenInputStartsWithPunctuation()
+    {
+        // The `!lastWasHyphen && length > 0` guard has two distinct reasons to be false: a hyphen
+        // was just written (mid-string collapse, covered by the "Trailing Spaces" case above), or
+        // no character has been written yet (a *leading* separator, exercised only here) -- without
+        // the `length > 0` half of that guard this would slugify to "-sprint" instead of "sprint".
+        var parsed = RoomId.TryParse("!!!Sprint", out var roomId);
+
+        Assert.True(parsed);
+        Assert.Equal("sprint", roomId.Value);
+    }
+
+    [Fact]
+    public void ToString_ReturnsValue()
+    {
+        RoomId.TryParse("Sprint Planning", out var roomId);
+
+        Assert.Equal(roomId.Value, roomId.ToString());
+    }
 }

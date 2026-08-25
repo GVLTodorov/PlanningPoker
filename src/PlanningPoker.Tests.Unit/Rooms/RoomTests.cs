@@ -324,4 +324,27 @@ public class RoomTests
 
         Assert.Equal("Retro", room.Name);
     }
+
+    [Fact]
+    public void GetPlayer_ReturnsThePlayer_WhenTheyAreInTheRoom()
+    {
+        var room = NewRoom();
+        var alice = room.AddPlayer("Alice", isSpectator: false, avatarUrl: null);
+
+        var found = room.GetPlayer(alice.Id);
+
+        Assert.Equal(alice.Id, found.Id);
+        Assert.Equal("Alice", found.Name);
+    }
+
+    [Fact]
+    public void SetPlayerName_UpdatesTheName()
+    {
+        var room = NewRoom();
+        var alice = room.AddPlayer("Alice", isSpectator: false, avatarUrl: null);
+
+        room.SetPlayerName(alice.Id, "Alicia");
+
+        Assert.Equal("Alicia", room.GetPlayer(alice.Id).Name);
+    }
 }

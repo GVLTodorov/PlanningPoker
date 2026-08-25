@@ -5,6 +5,7 @@
 @inject NavigationManager Navigation
 @inject RoomApiClient RoomApi
 @inject IJSRuntime JsRuntime
+@inject IGameHubClientFactory HubFactory
 
 <section class="screen board-screen">
     @if (_notFound)
@@ -77,7 +78,7 @@
     [Parameter]
     public string RoomId { get; set; } = string.Empty;
 
-    private GameHubClient? _hub;
+    private IGameHubClient? _hub;
     private RoomStateResponse? _state;
     private bool _notFound;
     private Guid _playerId;
@@ -114,7 +115,7 @@
 
         _decks = await RoomApi.GetDecksAsync();
 
-        _hub = new GameHubClient(Navigation);
+        _hub = HubFactory.Create();
         _hub.RoomStateChanged += OnRoomStateChanged;
         _hub.PlayerPickChanged += OnPlayerPickChanged;
         _hub.RoundRevealed += OnRoundRevealed;

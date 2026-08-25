@@ -132,7 +132,10 @@ or trigger the [Demo Video workflow](.github/workflows/demo-video-5p.yml) from t
 regenerate and commit `docs/demo.gif`. That workflow needs `GIPHY_API_BASE_URL`/`GIPHY_API_QUERY`
 configured as repo secrets to show real gifs. The same pattern, scaled to 12 players, is the
 [Demo Video (12 Players) workflow](.github/workflows/demo-video-12p.yml), producing
-`docs/twelve.gif`.
+`docs/twelve.gif`. All three demo workflows (this one, the 12-player one, and the load test below)
+can also be run back-to-back in a single Actions run via the
+[Demo All (Sequential) workflow](.github/workflows/demo-all.yml), which calls each as a reusable
+workflow chained with `needs:` so they don't race each other's `git push`.
 
 ## Performance
 

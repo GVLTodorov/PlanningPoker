@@ -6,6 +6,7 @@ name: Demo Video (5 Players)
 # the UI changes enough to be worth a fresh demo.
 on:
   workflow_dispatch:
+  workflow_call:
 
 jobs:
   record:

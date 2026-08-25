@@ -7,7 +7,7 @@ using PlanningPoker.Contracts.Serialization;
 namespace PlanningPoker.Client.Services;
 
 /// <summary>Thin wrapper over a <see cref="HubConnection"/> to <c>Api/Hubs/GameHub.cs</c>.</summary>
-public sealed class GameHubClient : IAsyncDisposable
+public sealed class GameHubClient : IGameHubClient
 {
     private readonly HubConnection _connection;
 
@@ -18,12 +18,24 @@ public sealed class GameHubClient : IAsyncDisposable
     public event Action? RemovedFromRoom;
 
     public GameHubClient(NavigationManager navigation)
-    {
-        _connection = new HubConnectionBuilder()
+        : this(new HubConnectionBuilder()
             .WithUrl(navigation.ToAbsoluteUri("/hubs/game"))
             .WithAutomaticReconnect()
             .AddJsonProtocol(options => options.PayloadSerializerOptions = PlanningPokerJsonContext.CreateOptions())
-            .Build();
+            .Build())
+    {
+    }
+
+    /// <summary>Accepts an already-built <see cref="HubConnection"/> directly. Used by
+    /// PlanningPoker.Tests.Integration/GameHubClientTests.cs to point this wrapper's real event
+    /// plumbing at an in-memory TestServer (the same <c>HttpMessageHandlerFactory</c> +
+    /// forced-transport trick GameHubTests.cs already uses for raw <see cref="HubConnectionBuilder"/>
+    /// usage) instead of a live browser-hosted URL -- HttpConnectionOptions itself isn't referenceable
+    /// from this Blazor WebAssembly project's compile target, so callers configure the connection
+    /// themselves and hand it in already-built.</summary>
+    public GameHubClient(HubConnection connection)
+    {
+        _connection = connection;
 
         _connection.On<RoomStateResponse>("RoomStateChanged", state => RoomStateChanged?.Invoke(state));
         _connection.On<PlayerPickStatusChanged>("PlayerPickStatusChanged", change => PlayerPickChanged?.Invoke(change));

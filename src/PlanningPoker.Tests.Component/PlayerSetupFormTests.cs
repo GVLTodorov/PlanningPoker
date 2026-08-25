@@ -43,4 +43,38 @@ public class PlayerSetupFormTests : BunitContext
 
         Assert.True(raised);
     }
+
+    [Fact]
+    public void FocusElement_IsInvokedOnlyOnce_AcrossMultipleRenders()
+    {
+        // OnAfterRenderAsync early-returns on every render after the first -- a second render pass
+        // (triggered here by a parameter change) must not call focusElement again.
+        var cut = Render<PlayerSetupForm>(p => p.Add(x => x.AvatarUrls, []).Add(x => x.Name, "Alice"));
+
+        cut.Render(p => p.Add(x => x.AvatarUrls, []).Add(x => x.Name, "Alicia"));
+
+        JSInterop.VerifyInvoke("focusElement", calledTimes: 1);
+    }
+
+    [Fact]
+    public void RefreshButton_ShowsSpinningState_WhileRefreshingAvatars()
+    {
+        var cut = Render<PlayerSetupForm>(p => p
+            .Add(x => x.AvatarUrls, [])
+            .Add(x => x.IsRefreshingAvatars, true));
+
+        var button = cut.Find(".icon-button");
+        Assert.Contains("icon-button-spinning", button.ClassList);
+        Assert.True(button.HasAttribute("disabled"));
+    }
+
+    [Fact]
+    public void RefreshButton_IsNotSpinning_ByDefault()
+    {
+        var cut = Render<PlayerSetupForm>(p => p.Add(x => x.AvatarUrls, []));
+
+        var button = cut.Find(".icon-button");
+        Assert.DoesNotContain("icon-button-spinning", button.ClassList);
+        Assert.False(button.HasAttribute("disabled"));
+    }
 }

@@ -7,6 +7,7 @@ name: Demo Video (12 Players)
 # (rather than a matrix job in it) so the two can be triggered and re-run independently.
 on:
   workflow_dispatch:
+  workflow_call:
 
 jobs:
   record:

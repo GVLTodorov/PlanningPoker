@@ -336,6 +336,21 @@ has no way to show avatars at all.
   ReportGenerator as an HTML report (uploaded as the `coverage-report`
   artifact) and a Markdown summary posted to the job summary. Informational
   only — not gated on a coverage threshold.
+- **Accepted coverage exceptions** (deliberate, not silent gaps):
+  `PlanningPoker.Client/Program.cs` cannot execute at all inside a `dotnet
+  test` process — `WebAssemblyHostBuilder.CreateDefault()` itself throws
+  `PlatformNotSupportedException` outside a real browser WASM host (it
+  eagerly reads the page's base URI via `System.Runtime.InteropServices.
+  JavaScript`), so the whole file, not just the blocking `RunAsync()` call,
+  is unreachable from unit/component tests. Each service it registers
+  (`RoomApiClient`, `PlayerSessionState`, `GameHubClientFactory`) is fully
+  unit tested on its own instead; the file itself is exercised only via the
+  manual Playwright demo workflows (Section 8, above), which aren't wired
+  into coverage collection. Separately, `PlanningPokerJsonContext`'s
+  System.Text.Json source-generated (de)serializers may retain a few
+  uncovered defensive/malformed-input branches after every declared
+  `[JsonSerializable]` type has been round-tripped — those live in
+  compiler-emitted code, not the hand-written source.
 - `PlanningPoker.Tests.Play` (and `PlanningPoker.Tests.Play.Twelve`, the same
   flow scaled to 12 players) drive the real UI through Playwright — join,
   pick, reveal, reset — and double as a live smoke test: every wait targets
@@ -346,7 +361,12 @@ has no way to show avatars at all.
   [Demo Video](.github/workflows/demo-video-5p.yml) /
   [Demo Video (12 Players)](.github/workflows/demo-video-12p.yml)
   workflows, which commit the regenerated `docs/demo.gif` /
-  `docs/twelve.gif`.
+  `docs/twelve.gif`. Each also declares `workflow_call:` (alongside its own
+  `workflow_dispatch:`) so the
+  [Demo All (Sequential) workflow](.github/workflows/demo-all.yml) can run
+  all three demo workflows (these two plus the load test in
+  [Section 10.3](#103-performance--load-testing)) back-to-back in one
+  Actions run, chained with `needs:` so their `git push` steps don't race.
 - See [Section 10](#10-performance) for performance-specific tests.
 
 ## 9. Documentation & Branding

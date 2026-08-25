@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\PlanningPoker.Infrastructure\PlanningPoker.Infrastructure.csproj" />
+    <ProjectReference Include="..\PlanningPoker.Api\PlanningPoker.Api.csproj" />
   </ItemGroup>
 
   <ItemGroup>

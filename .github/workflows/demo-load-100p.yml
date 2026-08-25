@@ -6,6 +6,7 @@ name: Demo Load (100 Players, Resource Usage)
 # demo-video-5p.yml/demo-video-12p.yml (those need a Giphy key and a browser; this needs neither).
 on:
   workflow_dispatch:
+  workflow_call:
 
 jobs:
   measure:

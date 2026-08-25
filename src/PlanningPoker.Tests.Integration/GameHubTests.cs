@@ -210,6 +210,200 @@ public class GameHubTests : IClassFixture<PlanningPokerWebApplicationFactory>
         Assert.Contains("spectator", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
+    [Fact]
+    public async Task JoinRoom_Throws_WhenRoomIdIsBogus()
+    {
+        await using var connection = CreateHubConnection();
+        await connection.StartAsync();
+
+        var ex = await Assert.ThrowsAsync<HubException>(
+            () => JoinAsync(connection, "no-such-room", "Alice"));
+        Assert.Contains("not found", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task AnyHubMethod_Throws_WhenCalledBeforeJoiningARoom()
+    {
+        await using var connection = CreateHubConnection();
+        await connection.StartAsync();
+
+        var ex = await Assert.ThrowsAsync<HubException>(() => connection.InvokeAsync("PickCard", 0));
+        Assert.Contains("not connected", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task LeaveRoom_UntracksThePlayer_SoFurtherCallsOnThatConnectionAreRejected()
+    {
+        using var client = _factory.CreateClient();
+        var createResponse = await client.PostAsJsonAsync(
+            "/api/rooms", new CreateRoomRequest("Leave Room Test", DeckType.Fibonacci), JsonOptions);
+        var room = await createResponse.Content.ReadFromJsonAsync<RoomSummaryResponse>(JsonOptions);
+
+        await using var connection = CreateHubConnection();
+        await connection.StartAsync();
+        await JoinAsync(connection, room!.RoomId, "Alice");
+
+        await connection.InvokeAsync("LeaveRoom");
+
+        var ex = await Assert.ThrowsAsync<HubException>(() => connection.InvokeAsync("PickCard", 0));
+        Assert.Contains("not connected", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Disconnect_WithoutHavingJoinedARoom_IsANoOp()
+    {
+        // HandleDisconnectAsync's very first guard (_connections.TryGet returning false) exists
+        // specifically for this case -- a connection that opened and closed without ever joining a
+        // room. Nothing to assert beyond "this doesn't throw/hang", since there's no tracked state to
+        // observe either way.
+        await using var connection = CreateHubConnection();
+        await connection.StartAsync();
+
+        await connection.StopAsync();
+    }
+
+    [Fact]
+    public async Task RenameRoom_ChangesTheName_AndBroadcastsToOtherPlayers()
+    {
+        using var client = _factory.CreateClient();
+        var createResponse = await client.PostAsJsonAsync(
+            "/api/rooms", new CreateRoomRequest("Rename Room Test", DeckType.Fibonacci), JsonOptions);
+        var room = await createResponse.Content.ReadFromJsonAsync<RoomSummaryResponse>(JsonOptions);
+
+        await using var aliceConnection = CreateHubConnection();
+        await using var bobConnection = CreateHubConnection();
+        var bobStateChanges = new List<RoomStateResponse>();
+        bobConnection.On<RoomStateResponse>("RoomStateChanged", state => bobStateChanges.Add(state));
+
+        await aliceConnection.StartAsync();
+        await bobConnection.StartAsync();
+        await JoinAsync(aliceConnection, room!.RoomId, "Alice");
+        await JoinAsync(bobConnection, room.RoomId, "Bob");
+
+        await aliceConnection.InvokeAsync("RenameRoom", "Renamed");
+
+        await WaitUntilAsync(() => bobStateChanges.Any(s => s.Name == "Renamed"));
+    }
+
+    [Fact]
+    public async Task SetPlayerName_ChangesTheCallersName_AndBroadcasts()
+    {
+        using var client = _factory.CreateClient();
+        var createResponse = await client.PostAsJsonAsync(
+            "/api/rooms", new CreateRoomRequest("Set Name Test", DeckType.Fibonacci), JsonOptions);
+        var room = await createResponse.Content.ReadFromJsonAsync<RoomSummaryResponse>(JsonOptions);
+
+        await using var aliceConnection = CreateHubConnection();
+        await using var bobConnection = CreateHubConnection();
+        var bobStateChanges = new List<RoomStateResponse>();
+        bobConnection.On<RoomStateResponse>("RoomStateChanged", state => bobStateChanges.Add(state));
+
+        await aliceConnection.StartAsync();
+        await bobConnection.StartAsync();
+        var aliceJoin = await JoinAsync(aliceConnection, room!.RoomId, "Alice");
+        await JoinAsync(bobConnection, room.RoomId, "Bob");
+
+        await aliceConnection.InvokeAsync("SetPlayerName", "Alicia");
+
+        await WaitUntilAsync(() => bobStateChanges.Any(
+            s => s.Players.Any(p => p.PlayerId == aliceJoin.PlayerId && p.Name == "Alicia")));
+    }
+
+    [Fact]
+    public async Task SetSpectator_AtHubLevel_UpdatesTheFlag_AndBroadcasts()
+    {
+        using var client = _factory.CreateClient();
+        var createResponse = await client.PostAsJsonAsync(
+            "/api/rooms", new CreateRoomRequest("Set Spectator Test", DeckType.Fibonacci), JsonOptions);
+        var room = await createResponse.Content.ReadFromJsonAsync<RoomSummaryResponse>(JsonOptions);
+
+        await using var aliceConnection = CreateHubConnection();
+        await using var bobConnection = CreateHubConnection();
+        var bobStateChanges = new List<RoomStateResponse>();
+        bobConnection.On<RoomStateResponse>("RoomStateChanged", state => bobStateChanges.Add(state));
+
+        await aliceConnection.StartAsync();
+        await bobConnection.StartAsync();
+        var aliceJoin = await JoinAsync(aliceConnection, room!.RoomId, "Alice");
+        await JoinAsync(bobConnection, room.RoomId, "Bob");
+
+        await aliceConnection.InvokeAsync("SetSpectator", true);
+
+        await WaitUntilAsync(() => bobStateChanges.Any(
+            s => s.Players.Single(p => p.PlayerId == aliceJoin.PlayerId).IsSpectator));
+    }
+
+    [Fact]
+    public async Task Reveal_ByNonHost_Throws()
+    {
+        using var client = _factory.CreateClient();
+        var createResponse = await client.PostAsJsonAsync(
+            "/api/rooms", new CreateRoomRequest("Reveal Rejection Room", DeckType.Fibonacci), JsonOptions);
+        var room = await createResponse.Content.ReadFromJsonAsync<RoomSummaryResponse>(JsonOptions);
+
+        await using var aliceConnection = CreateHubConnection();
+        await using var bobConnection = CreateHubConnection();
+        await aliceConnection.StartAsync();
+        await bobConnection.StartAsync();
+        await JoinAsync(aliceConnection, room!.RoomId, "Alice");
+        await JoinAsync(bobConnection, room.RoomId, "Bob");
+
+        var ex = await Assert.ThrowsAsync<HubException>(() => bobConnection.InvokeAsync("Reveal"));
+        Assert.Contains("host", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Reset_ByNonHost_Throws()
+    {
+        using var client = _factory.CreateClient();
+        var createResponse = await client.PostAsJsonAsync(
+            "/api/rooms", new CreateRoomRequest("Reset Rejection Room", DeckType.Fibonacci), JsonOptions);
+        var room = await createResponse.Content.ReadFromJsonAsync<RoomSummaryResponse>(JsonOptions);
+
+        await using var aliceConnection = CreateHubConnection();
+        await using var bobConnection = CreateHubConnection();
+        await aliceConnection.StartAsync();
+        await bobConnection.StartAsync();
+        await JoinAsync(aliceConnection, room!.RoomId, "Alice");
+        await JoinAsync(bobConnection, room.RoomId, "Bob");
+        await aliceConnection.InvokeAsync("PickCard", 0);
+        await bobConnection.InvokeAsync("PickCard", 0);
+        await aliceConnection.InvokeAsync("Reveal");
+
+        var ex = await Assert.ThrowsAsync<HubException>(() => bobConnection.InvokeAsync("Reset"));
+        Assert.Contains("host", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task RemovePlayer_TargetAlreadyDisconnected_StillUpdatesRoomState()
+    {
+        using var client = _factory.CreateClient();
+        var createResponse = await client.PostAsJsonAsync(
+            "/api/rooms", new CreateRoomRequest("Kick Already Gone Room", DeckType.Fibonacci), JsonOptions);
+        var room = await createResponse.Content.ReadFromJsonAsync<RoomSummaryResponse>(JsonOptions);
+
+        await using var aliceConnection = CreateHubConnection();
+        var bobConnection = CreateHubConnection();
+        var aliceStateChanges = new List<RoomStateResponse>();
+        aliceConnection.On<RoomStateResponse>("RoomStateChanged", state => aliceStateChanges.Add(state));
+
+        await aliceConnection.StartAsync();
+        await bobConnection.StartAsync();
+        var aliceJoin = await JoinAsync(aliceConnection, room!.RoomId, "Alice");
+        var bobJoin = await JoinAsync(bobConnection, room.RoomId, "Bob");
+
+        // Bob's connection tracking is removed synchronously on disconnect (only the *domain-level*
+        // player removal is delayed by the reconnect grace period) -- so Alice's RemovePlayer call
+        // right after this hits the `TryGetConnectionId` false branch deterministically, without
+        // needing to wait out any grace period.
+        await bobConnection.DisposeAsync();
+
+        await aliceConnection.InvokeAsync("RemovePlayer", bobJoin.PlayerId);
+
+        await WaitUntilAsync(() => aliceStateChanges.Any(s => s.Players.Count == 1));
+        Assert.Equal(aliceJoin.PlayerId, aliceStateChanges.Last().Players.Single().PlayerId);
+    }
+
     // SignalR's hub dispatcher requires the exact declared arity -- it does NOT fill in C# optional
     // parameters for a client that sends fewer arguments -- so every JoinRoom call needs all five,
     // even when existingPlayerId is just null. Centralized here so that's a one-line fact, not five
