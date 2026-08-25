@@ -17,7 +17,7 @@ Directory.CreateDirectory(outputDir);
 
 var rng = new Random();
 var usedAvatars = new HashSet<string>();
-string[] playerNames = ["Maya", "Noah", "Priya", "Sam", "Alex"];
+string[] playerNames = ["Maya Chen", "Noah Bergström", "Priya Sharma", "Sam Okafor", "Alex Rivera"];
 var viewport = new ViewportSize { Width = 1280, Height = 720 };
 
 Console.WriteLine($"Recording demo against {baseUrl}, output dir {outputDir}");
