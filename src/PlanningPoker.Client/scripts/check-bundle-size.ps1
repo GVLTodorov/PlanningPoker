@@ -3,14 +3,14 @@
   Publishes the Blazor client and checks the Brotli-compressed _framework bundle size against a
   budget. Download size is "the primary perf metric users actually feel" (REQUIREMENTS.MD Section
   10.3), so it's tracked explicitly here rather than left to grow unnoticed. Non-gating in CI --
-  run manually too: pwsh scripts/check-bundle-size.ps1
+  run manually too: pwsh src/PlanningPoker.Client/scripts/check-bundle-size.ps1
 #>
 param(
     [long]$BudgetBytes = 4194304  # 4 MiB; measured baseline is ~2.3 MB, this leaves headroom
 )
 
 $ErrorActionPreference = "Stop"
-$repoRoot = Split-Path -Parent $PSScriptRoot
+$repoRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
 $publishDir = Join-Path $repoRoot "artifacts/bundle-size-check"
 
 if (Test-Path $publishDir) {

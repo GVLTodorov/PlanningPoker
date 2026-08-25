@@ -69,7 +69,7 @@ jobs:
 
       - name: Check bundle size
         shell: pwsh
-        run: ./scripts/check-bundle-size.ps1
+        run: ./src/PlanningPoker.Client/scripts/check-bundle-size.ps1
 
   # Micro-benchmarks for domain hot paths, JSON serialization, and the Giphy cache
   # (REQUIREMENTS.MD Section 10.3). `--job short` trades precision for a runtime that fits a shared
