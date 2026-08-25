@@ -120,16 +120,18 @@ dotnet test PlanningPoker.slnx
 
 Runs the unit, component, and integration suites together. The [CI workflow](.github/workflows/ci.yml)
 runs the same command on every push/PR and gates the version-bump/image-build/push job on it
-passing. Performance checks (`PlanningPoker.Tests.Benchmarks`, `PlanningPoker.Tests.LoadTest`, and the bundle
+passing. It also collects code coverage and publishes an HTML report (the `coverage-report`
+artifact) plus a summary in the job summary — informational only, not gated on a threshold.
+Performance checks (`PlanningPoker.Tests.Benchmarks`, `PlanningPoker.Tests.LoadTest`, and the bundle
 size check in CI) are run separately and don't gate every commit — see REQUIREMENTS.MD Section 10.3.
 
 The demo video above is produced by `PlanningPoker.Tests.Play`, a Playwright-driven browser
 simulation (5 players join, vote, reveal, reset, and vote again). It's not part of `dotnet test` —
 run it manually against a live instance (`dotnet run --project PlanningPoker.Tests.Play -- http://localhost:6232`),
-or trigger the [Demo Video workflow](.github/workflows/demo-video.yml) from the Actions tab to
+or trigger the [Demo Video workflow](.github/workflows/demo-video-5p.yml) from the Actions tab to
 regenerate and commit `docs/demo.gif`. That workflow needs `GIPHY_API_BASE_URL`/`GIPHY_API_QUERY`
 configured as repo secrets to show real gifs. The same pattern, scaled to 12 players, is the
-[Demo Video (Twelve Players) workflow](.github/workflows/demo-video-twelve.yml), producing
+[Demo Video (12 Players) workflow](.github/workflows/demo-video-12p.yml), producing
 `docs/twelve.gif`.
 
 ## Performance
@@ -141,7 +143,7 @@ browsers) voting at a human pace — each room's pick/reveal/reset round takes 1
 seconds, with picks landing at random moments rather than all at once — while sampling
 `PlanningPoker.Api`'s own CPU% and working-set memory. It exists purely to see what the app costs
 under sustained concurrent load. Trigger the
-[Demo Hundred workflow](.github/workflows/demo-hundred.yml) from the Actions tab to regenerate and
+[Demo Load workflow](.github/workflows/demo-load-100p.yml) from the Actions tab to regenerate and
 commit the chart above, or run it manually against a live instance:
 
 ```bash

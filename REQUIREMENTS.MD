@@ -331,6 +331,11 @@ has no way to show avatars at all.
 - The CI pipeline (see [Section 3](#3-devops--ci-cd)) must run both the unit
   and integration test suites and fail the build/version-bump/image-push on
   any failure.
+- The CI `test` job collects code coverage (`coverlet.collector`, via
+  `dotnet test --collect:"XPlat Code Coverage"`) and renders it with
+  ReportGenerator as an HTML report (uploaded as the `coverage-report`
+  artifact) and a Markdown summary posted to the job summary. Informational
+  only — not gated on a coverage threshold.
 - `PlanningPoker.Tests.Play` (and `PlanningPoker.Tests.Play.Twelve`, the same
   flow scaled to 12 players) drive the real UI through Playwright — join,
   pick, reveal, reset — and double as a live smoke test: every wait targets
@@ -338,8 +343,8 @@ has no way to show avatars at all.
   instead of silently producing a broken demo. Not gated in CI (same
   non-gating treatment as [Section 10.3](#103-performance--load-testing));
   triggered manually via the
-  [Demo Video](.github/workflows/demo-video.yml) /
-  [Demo Video (Twelve Players)](.github/workflows/demo-video-twelve.yml)
+  [Demo Video](.github/workflows/demo-video-5p.yml) /
+  [Demo Video (12 Players)](.github/workflows/demo-video-12p.yml)
   workflows, which commit the regenerated `docs/demo.gif` /
   `docs/twelve.gif`.
 - See [Section 10](#10-performance) for performance-specific tests.
@@ -444,7 +449,7 @@ measure them with real benchmarks/load tests.
     round takes 15-20 wall-clock seconds, picks staggered rather than
     simultaneous) while sampling `PlanningPoker.Api`'s own CPU% and
     working-set memory and rendering the series as an SVG chart. Triggered
-    manually via the [Demo Hundred workflow](.github/workflows/demo-hundred.yml),
+    manually via the [Demo Load workflow](.github/workflows/demo-load-100p.yml),
     which commits the refreshed chart to `docs/hundred-resource-usage.svg`
     (embedded in the README's Performance section).
 - Track the published Blazor WASM bundle size and flag/fail on regressions

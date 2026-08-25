@@ -1,9 +1,9 @@
-name: Demo Hundred (Resource Usage)
+name: Demo Load (100 Players, Resource Usage)
 
 # Manual only: this drives 10 rooms x 10 players (100 real SignalR connections, no browsers) against
 # a live instance purely to see what PlanningPoker.Api itself costs in CPU/memory under sustained
 # concurrent load -- it produces a chart, not a recording, so it's kept separate from
-# demo-video.yml/demo-video-twelve.yml (those need a Giphy key and a browser; this needs neither).
+# demo-video-5p.yml/demo-video-12p.yml (those need a Giphy key and a browser; this needs neither).
 on:
   workflow_dispatch:
 

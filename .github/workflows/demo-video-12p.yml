@@ -1,9 +1,9 @@
-name: Demo Video (Twelve Players)
+name: Demo Video (12 Players)
 
 # Manual only: this drives 12 real browsers against a live instance and needs a real Giphy API key
 # (GIPHY_API_BASE_URL/GIPHY_API_QUERY secrets) to show real gifs, so it isn't cheap or safe to run
 # on every push/PR the way ci.yml's jobs are. Trigger it on-demand from the Actions tab whenever
-# the UI changes enough to be worth a fresh demo. Kept as a separate workflow from demo-video.yml
+# the UI changes enough to be worth a fresh demo. Kept as a separate workflow from demo-video-5p.yml
 # (rather than a matrix job in it) so the two can be triggered and re-run independently.
 on:
   workflow_dispatch:

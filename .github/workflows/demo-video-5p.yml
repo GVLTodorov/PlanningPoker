@@ -1,4 +1,4 @@
-name: Demo Video
+name: Demo Video (5 Players)
 
 # Manual only: this drives 5 real browsers against a live instance and needs a real Giphy API key
 # (GIPHY_API_BASE_URL/GIPHY_API_QUERY secrets) to show real gifs, so it isn't cheap or safe to run
