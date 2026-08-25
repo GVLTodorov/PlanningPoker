@@ -93,5 +93,9 @@ jobs:
             echo "Demo GIF unchanged, nothing to commit."
           else
             git commit -m "chore: refresh demo gif"
+            # `main` may have moved since this job's checkout (e.g. another job in the same Demo
+            # All orchestrator run already pushed) -- rebase onto whatever's actually there before
+            # pushing. Safe here: this job only ever touches its own generated file.
+            git pull --rebase origin main
             git push
           fi

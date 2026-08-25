@@ -366,7 +366,10 @@ has no way to show avatars at all.
   [Demo All (Sequential) workflow](.github/workflows/demo-all.yml) can run
   all three demo workflows (these two plus the load test in
   [Section 10.3](#103-performance--load-testing)) back-to-back in one
-  Actions run, chained with `needs:` so their `git push` steps don't race.
+  Actions run, chained with `needs:` so they run one at a time. Each job's
+  checkout is still pinned to the run's starting SHA, so each commit step
+  runs `git pull --rebase origin main` right before `git push` to pick up
+  any earlier job's already-pushed commit.
 - See [Section 10](#10-performance) for performance-specific tests.
 
 ## 9. Documentation & Branding

@@ -135,7 +135,10 @@ configured as repo secrets to show real gifs. The same pattern, scaled to 12 pla
 `docs/twelve.gif`. All three demo workflows (this one, the 12-player one, and the load test below)
 can also be run back-to-back in a single Actions run via the
 [Demo All (Sequential) workflow](.github/workflows/demo-all.yml), which calls each as a reusable
-workflow chained with `needs:` so they don't race each other's `git push`.
+workflow chained with `needs:` so they run one at a time. Each job's own checkout is still pinned to
+the SHA the overall run started from, though, so an earlier job's push isn't visible yet by the time
+a later job commits — every job's commit step runs `git pull --rebase origin main` right before
+`git push` to pick that up.
 
 ## Performance
 

@@ -68,5 +68,9 @@ jobs:
             echo "Resource-usage chart unchanged, nothing to commit."
           else
             git commit -m "chore: refresh 10x10 resource-usage chart"
+            # `main` may have moved since this job's checkout (e.g. another job in the same Demo
+            # All orchestrator run already pushed) -- rebase onto whatever's actually there before
+            # pushing. Safe here: this job only ever touches its own generated file.
+            git pull --rebase origin main
             git push
           fi
