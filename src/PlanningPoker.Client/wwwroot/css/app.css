@@ -544,7 +544,7 @@ a {
     cursor: pointer;
 }
 
-.hand-card:hover:not(:disabled) {
+.hand-card:hover:not(:disabled):not(.hand-card-selected) {
     background: var(--color-green-50);
 }
 
@@ -552,6 +552,10 @@ a {
     background: var(--color-green-700);
     color: white;
     border-color: var(--color-green-800);
+}
+
+.hand-card-selected:hover:not(:disabled) {
+    background: var(--color-green-800);
 }
 
 .hand-card:disabled {
