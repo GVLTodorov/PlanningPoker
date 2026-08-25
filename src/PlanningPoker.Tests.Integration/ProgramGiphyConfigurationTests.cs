@@ -18,17 +18,31 @@ public class ProgramGiphyConfigurationTests
     [Fact]
     public async Task GiphyClient_IsRegistered_WhenGiphyOptionsAreConfigured()
     {
-        await using var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-            builder.ConfigureAppConfiguration((_, config) => config.AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["GIPHY_API_BASE_URL"] = "https://example.test/search",
-                ["GIPHY_API_QUERY"] = "q=test",
-            })));
+        // Program.cs's `if (giphyOptions.IsConfigured)` branch runs synchronously inside
+        // `WebApplication.CreateBuilder(args)`/before `Build()`, but `WithWebHostBuilder`'s
+        // `ConfigureAppConfiguration` only composes sources at `Build()` time -- too late to affect
+        // that branch. Real process environment variables, however, are picked up by
+        // `AddEnvironmentVariables()` as part of that same `CreateBuilder(args)` call, so they're the
+        // only override that actually lands before the branch decision is made. (This test passed
+        // locally on a machine with a real appsettings.Local.json purely by accident -- that file's
+        // real credentials made IsConfigured true regardless of whether this override worked. CI has
+        // no such file, so it failed there until this fix.)
+        Environment.SetEnvironmentVariable("GIPHY_API_BASE_URL", "https://example.test/search");
+        Environment.SetEnvironmentVariable("GIPHY_API_QUERY", "q=test");
+        try
+        {
+            await using var factory = new WebApplicationFactory<Program>();
 
-        using var scope = factory.Services.CreateScope();
-        var client = scope.ServiceProvider.GetRequiredService<IGiphyClient>();
+            using var scope = factory.Services.CreateScope();
+            var client = scope.ServiceProvider.GetRequiredService<IGiphyClient>();
 
-        Assert.IsType<GiphyClient>(client);
+            Assert.IsType<GiphyClient>(client);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("GIPHY_API_BASE_URL", null);
+            Environment.SetEnvironmentVariable("GIPHY_API_QUERY", null);
+        }
     }
 
     [Fact]
