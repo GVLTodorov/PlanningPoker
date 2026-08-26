@@ -21,11 +21,18 @@ RUN dotnet publish src/PlanningPoker.Api/PlanningPoker.Api.csproj -c Release -o 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 
+# curl is needed for the HEALTHCHECK below; the base image doesn't include it.
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
 RUN useradd --uid 5678 --user-group --shell /usr/sbin/nologin appuser
 COPY --from=build /app/publish .
 USER appuser
 
 ENV ASPNETCORE_URLS=http://+:8080
 EXPOSE 8080
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:8080/healthz || exit 1
 
 ENTRYPOINT ["dotnet", "PlanningPoker.Api.dll"]

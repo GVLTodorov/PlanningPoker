@@ -84,6 +84,13 @@ planningpoker:
 - `GET /healthz` — unauthenticated liveness check (`{"status":"ok"}`), for
   container orchestration / uptime monitoring. Not gated behind the `/api`
   prefix the room/deck/avatar endpoints use.
+- The Dockerfile declares a `HEALTHCHECK` (`curl -f http://localhost:8080/healthz`)
+  and `docker-compose.yml` mirrors it under `healthcheck:`, so `docker ps` /
+  `docker compose ps` report container health and Docker restarts a
+  unresponsive container even though `restart: unless-stopped` only reacts to
+  process exit. The runtime image installs `curl` in the final stage
+  specifically to support this (the base `aspnet` image ships neither `curl`
+  nor `wget`).
 
 > **Giphy endpoint gotcha:** `GIPHY_API_BASE_URL` must point at
 > `https://api.giphy.com/v1/gifs/trending`, not `.../search`. The `search`
