@@ -259,6 +259,26 @@ public class BoardTests : BunitContext
     }
 
     [Fact]
+    public void OnReconnected_RejoinsWithTheSamePlayerId_ToReclaimServerSideTracking()
+    {
+        // WithAutomaticReconnect() lands the transport on a fresh, untracked ConnectionId -- without
+        // a rejoin, the server's GameHub.GetTrackedRoomAndPlayer() would throw "Not connected to a
+        // room." the next time this page calls PickCard/Reveal/etc.
+        var hub = SetUpHub();
+        SetUpSession();
+        var hostId = Guid.NewGuid();
+        var host = new PlayerResponse(hostId, "Alice", false, true, null, false, null);
+        hub.JoinRoomResult.SetResult(NewJoinResult(hostId, isHost: true, players: host));
+        var cut = Render<Board>(p => p.Add(x => x.RoomId, RoomId));
+
+        hub.RaiseReconnected();
+        cut.WaitForAssertion(() =>
+            Assert.Equal(2, hub.Calls.Count(c => c.StartsWith("JoinRoomAsync("))));
+
+        Assert.Contains(hub.Calls, c => c.StartsWith("JoinRoomAsync(") && c.EndsWith($",{hostId})"));
+    }
+
+    [Fact]
     public void OnRemovedFromRoom_ClearsSession_AndNavigatesHome()
     {
         var hub = SetUpHub();

@@ -259,6 +259,19 @@ the join screen and asking them to re-enter everything. Scoped to
 within the same tab but doesn't linger indefinitely across unrelated future
 visits once the tab closes.
 
+### 5.6a Rejoin after a transport-level reconnect (no page refresh)
+
+Distinct from [5.6](#56-session-persistence-across-a-page-refresh): the
+SignalR connection itself uses `WithAutomaticReconnect()`, which silently
+re-establishes transport connectivity after a drop (Wi-Fi blip, laptop
+sleep/wake, mobile network switch) without a page refresh — but the
+reconnected transport gets a new connection id, and the server's
+per-connection room/player tracking has no entry for it. The client detects
+this (`GameHubClient.Reconnected`) and re-invokes `JoinRoom` with the same
+player id to reclaim server-side tracking and refresh room state, so
+subsequent actions (pick, reveal, etc.) keep working instead of failing with
+"Not connected to a room."
+
 ### 5.7 Room/player rename, mid-room spectator toggle (backend-only, no UI)
 
 The hub supports renaming a room (`RenameRoom`), renaming a player in-room

@@ -16,6 +16,7 @@ public sealed class GameHubClient : IGameHubClient
     public event Action<RoundRevealed>? RoundRevealed;
     public event Action? RoundReset;
     public event Action? RemovedFromRoom;
+    public event Action? Reconnected;
 
     public GameHubClient(NavigationManager navigation)
         : this(new HubConnectionBuilder()
@@ -42,6 +43,17 @@ public sealed class GameHubClient : IGameHubClient
         _connection.On<RoundRevealed>("RoundRevealed", revealed => RoundRevealed?.Invoke(revealed));
         _connection.On("RoundReset", () => RoundReset?.Invoke());
         _connection.On("RemovedFromRoom", () => RemovedFromRoom?.Invoke());
+
+        // WithAutomaticReconnect() restores transport connectivity transparently, but the new
+        // connection has a fresh ConnectionId -- the server's per-connection room/player tracking
+        // (GameHub's IPlayerTracker) has no entry for it until JoinRoom runs again. Without this,
+        // every hub method after a reconnect throws "Not connected to a room." the moment the user
+        // next picks a card. The caller re-invokes JoinRoomAsync with the existing player id here.
+        _connection.Reconnected += _ =>
+        {
+            Reconnected?.Invoke();
+            return Task.CompletedTask;
+        };
     }
 
     public HubConnectionState State => _connection.State;

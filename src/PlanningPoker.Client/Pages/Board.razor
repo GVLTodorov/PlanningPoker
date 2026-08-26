@@ -121,6 +121,7 @@
         _hub.RoundRevealed += OnRoundRevealed;
         _hub.RoundReset += OnRoundReset;
         _hub.RemovedFromRoom += OnRemovedFromRoom;
+        _hub.Reconnected += OnReconnected;
 
         await _hub.StartAsync();
 
@@ -232,6 +233,26 @@
         });
     }
 
+    private void OnReconnected()
+    {
+        InvokeAsync(async () =>
+        {
+            if (_hub is null)
+            {
+                return;
+            }
+
+            // Reclaims this player id server-side (see GameHub.JoinRoom) so the hub methods this
+            // page still calls -- PickCard, Reveal, etc. -- work again after the transport's own
+            // automatic reconnect landed us on a new, untracked ConnectionId. Also refreshes _state
+            // in case anything changed in the room while we were disconnected.
+            var result = await _hub.JoinRoomAsync(
+                RoomId, Session.PlayerName, Session.IsSpectator, Session.AvatarUrl, _playerId);
+            _state = result.State;
+            StateHasChanged();
+        });
+    }
+
     private async Task PickCardAsync(int? cardIndex)
     {
         _myCardIndex = cardIndex;
@@ -265,6 +286,7 @@
             _hub.RoundRevealed -= OnRoundRevealed;
             _hub.RoundReset -= OnRoundReset;
             _hub.RemovedFromRoom -= OnRemovedFromRoom;
+            _hub.Reconnected -= OnReconnected;
             await _hub.DisposeAsync();
         }
 

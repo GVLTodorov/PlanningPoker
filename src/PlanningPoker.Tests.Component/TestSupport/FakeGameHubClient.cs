@@ -16,6 +16,7 @@ internal sealed class FakeGameHubClient : IGameHubClient
     public event Action<RoundRevealed>? RoundRevealed;
     public event Action? RoundReset;
     public event Action? RemovedFromRoom;
+    public event Action? Reconnected;
 
     public List<string> Calls { get; } = [];
 
@@ -101,4 +102,6 @@ internal sealed class FakeGameHubClient : IGameHubClient
     public void RaiseRoundReset() => RoundReset?.Invoke();
 
     public void RaiseRemovedFromRoom() => RemovedFromRoom?.Invoke();
+
+    public void RaiseReconnected() => Reconnected?.Invoke();
 }

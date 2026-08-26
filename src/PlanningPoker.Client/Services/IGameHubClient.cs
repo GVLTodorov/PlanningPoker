@@ -13,6 +13,7 @@ public interface IGameHubClient : IAsyncDisposable
     event Action<RoundRevealed>? RoundRevealed;
     event Action? RoundReset;
     event Action? RemovedFromRoom;
+    event Action? Reconnected;
 
     HubConnectionState State { get; }
 
