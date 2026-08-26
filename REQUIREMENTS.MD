@@ -416,8 +416,11 @@ deployment, not just a bare `<title>`:
   pointing at the live deployment URL.
 - Open Graph (`og:*`) and Twitter Card (`twitter:*`) tags so a shared room
   link renders a real preview card (title, description, image) instead of a
-  bare URL when pasted into Slack/social apps. The preview image is the same
-  SVG icon/logo referenced above.
+  bare URL when pasted into Slack/social apps. The preview image is a
+  dedicated `wwwroot/og-image.png` (1200x630, the standard OG size) — not the
+  raw SVG icon/logo, since Slack/Twitter/X render SVG previews unreliably or
+  not at all; `twitter:card` is `summary_large_image` to match that image's
+  landscape aspect ratio.
 - A `WebApplication` JSON-LD (`application/ld+json`) block describing the
   app as a free `BusinessApplication` for search engines.
 - `wwwroot/robots.txt` (allow all, points at the sitemap) and
