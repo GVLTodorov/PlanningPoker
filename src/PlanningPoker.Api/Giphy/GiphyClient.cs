@@ -14,6 +14,11 @@ public sealed class GiphyClient : IGiphyClient
 {
     private const string CacheKey = "giphy:batch";
 
+    // Giphy's ~100px-tall, still-animated rendition. The avatar picker only ever displays
+    // these at 96x72px (see AvatarPicker.razor / .avatar-option in app.css), so this avoids
+    // fetching Giphy's full-resolution "original" GIF (hundreds of KB to several MB, unresized).
+    private const string ImageRenditionKey = "fixed_height_small";
+
     private readonly HttpClient _httpClient;
     private readonly GiphyOptions _options;
     private readonly IMemoryCache _cache;
@@ -63,8 +68,8 @@ public sealed class GiphyClient : IGiphyClient
         foreach (var item in data.EnumerateArray())
         {
             if (item.TryGetProperty("images", out var images) &&
-                images.TryGetProperty("original", out var original) &&
-                original.TryGetProperty("url", out var urlElement) &&
+                images.TryGetProperty(ImageRenditionKey, out var rendition) &&
+                rendition.TryGetProperty("url", out var urlElement) &&
                 urlElement.GetString() is { Length: > 0 } url)
             {
                 urls.Add(url);

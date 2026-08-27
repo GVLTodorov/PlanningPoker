@@ -10,9 +10,9 @@ public class GiphyClientTests
 {
     private const string ThreeItemBatch = """
         {"data":[
-            {"images":{"original":{"url":"https://example.test/1.gif"}}},
-            {"images":{"original":{"url":"https://example.test/2.gif"}}},
-            {"images":{"original":{"url":"https://example.test/3.gif"}}}
+            {"images":{"fixed_height_small":{"url":"https://example.test/1.gif"}}},
+            {"images":{"fixed_height_small":{"url":"https://example.test/2.gif"}}},
+            {"images":{"fixed_height_small":{"url":"https://example.test/3.gif"}}}
         ]}
         """;
 
@@ -74,13 +74,13 @@ public class GiphyClientTests
         Assert.Empty(urls);
     }
 
-    // Each case below drops one link in the images.original.url chain (or leaves the url empty),
-    // which should skip just that malformed item rather than throwing or including a garbage entry.
+    // Each case below drops one link in the images.fixed_height_small.url chain (or leaves the url
+    // empty), which should skip just that malformed item rather than throwing or including a garbage entry.
     [Theory]
     [InlineData("""{"data":[{"notImages":{}}]}""")]
-    [InlineData("""{"data":[{"images":{"notOriginal":{}}}]}""")]
-    [InlineData("""{"data":[{"images":{"original":{"notUrl":"x"}}}]}""")]
-    [InlineData("""{"data":[{"images":{"original":{"url":""}}}]}""")]
+    [InlineData("""{"data":[{"images":{"notFixedHeightSmall":{}}}]}""")]
+    [InlineData("""{"data":[{"images":{"fixed_height_small":{"notUrl":"x"}}}]}""")]
+    [InlineData("""{"data":[{"images":{"fixed_height_small":{"url":""}}}]}""")]
     public async Task GetRandomImageUrlsAsync_SkipsMalformedItems(string responseBody)
     {
         var handler = new StubHttpMessageHandler(HttpStatusCode.OK, responseBody);

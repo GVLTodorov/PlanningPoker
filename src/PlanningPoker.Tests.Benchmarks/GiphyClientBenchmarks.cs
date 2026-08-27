@@ -11,9 +11,9 @@ public class GiphyClientBenchmarks
 {
     private const string SampleResponse = """
         {"data":[
-            {"images":{"original":{"url":"https://example.test/1.gif"}}},
-            {"images":{"original":{"url":"https://example.test/2.gif"}}},
-            {"images":{"original":{"url":"https://example.test/3.gif"}}}
+            {"images":{"fixed_height_small":{"url":"https://example.test/1.gif"}}},
+            {"images":{"fixed_height_small":{"url":"https://example.test/2.gif"}}},
+            {"images":{"fixed_height_small":{"url":"https://example.test/3.gif"}}}
         ]}
         """;
 

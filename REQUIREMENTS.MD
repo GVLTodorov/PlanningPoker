@@ -296,6 +296,10 @@ is a candidate for future work.
   ([5.1](#51-workflow-a--home-screen-create-a-room)) and the join screen
   ([5.2](#52-workflow-b--joining-via-a-shared-link)). There is no reveal-gif
   feature — the round-reveal step is Giphy-free.
+- Requests Giphy's `fixed_height_small` rendition (a small, still-animated
+  GIF) rather than `original` (Giphy's full-resolution, unresized master
+  file) — the picker only ever displays these at 96×72px, so the smaller
+  rendition avoids shipping several MB of unused pixels per page load.
 
 ### 6.1 Offline fallback: bundled AI-generated avatars (candidate for future work)
 

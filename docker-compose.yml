@@ -15,7 +15,7 @@ services:
       # Both are optional -- the app runs fine with no visible Giphy features when they're unset.
       # The real API key is shared out-of-band and injected only at deploy time; never commit it.
       - GIPHY_API_BASE_URL=https://api.giphy.com/v1/gifs/trending?api_key=YOUR_GIPHY_API_KEY
-      - GIPHY_API_QUERY=limit=10&offset=0&rating=g&lang=en
+      - GIPHY_API_QUERY=limit=10&offset=0&rating=g&lang=en&bundle=low_bandwidth
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/healthz"]
       interval: 30s
