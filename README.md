@@ -6,6 +6,8 @@
   <em>Real-time, self-hosted Planning Poker for agile estimation.</em>
 
   [![CI](https://github.com/GVLTodorov/PlanningPoker/actions/workflows/ci.yml/badge.svg)](https://github.com/GVLTodorov/PlanningPoker/actions/workflows/ci.yml)
+  ![Line coverage](badges/line_coverage.svg)
+  ![Branch coverage](badges/branch_coverage.svg)
 
   ![Demo: 5 players join a room, vote, the host reveals, resets, and everyone votes again.](docs/demo.gif)
 </div>
