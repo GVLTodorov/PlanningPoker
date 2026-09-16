@@ -84,6 +84,8 @@
     private Guid _playerId;
     private IReadOnlyList<DeckResponse> _decks = [];
     private bool _linkCopied;
+    private int _linkCopyRequestId;
+    private bool _disposed;
     private int? _myCardIndex;
     private IJSObjectReference? _jsModule;
 
@@ -273,12 +275,26 @@
         _jsModule ??= await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/interop.js");
         var url = Navigation.ToAbsoluteUri($"/{RoomId}").ToString();
         await _jsModule.InvokeVoidAsync("copyToClipboard", url);
+
+        var requestId = ++_linkCopyRequestId;
         _linkCopied = true;
         StateHasChanged();
+
+        await Task.Delay(Constants.LinkCopiedIndicatorDurationMs);
+
+        // Skip if a later click already started its own reset countdown, or the component was
+        // torn down while we were waiting -- calling StateHasChanged() after disposal throws.
+        if (!_disposed && requestId == _linkCopyRequestId)
+        {
+            _linkCopied = false;
+            StateHasChanged();
+        }
     }
 
     public async ValueTask DisposeAsync()
     {
+        _disposed = true;
+
         if (_hub is not null)
         {
             _hub.RoomStateChanged -= OnRoomStateChanged;

@@ -141,9 +141,10 @@ planningpoker:
    that visible, it isn't a toggle.
 7. Once the room is created, its board screen header shows a copy-invite
    button next to the room name — an icon-only button (copy glyph, swapping
-   to a checkmark once clicked; accessible via `aria-label`/`title` since
-   there's no visible text) that copies the shareable room link to the
-   clipboard. Visible to every player in the room, not just the host. The
+   to a checkmark once clicked, then back to the copy glyph a couple of
+   seconds later; accessible via `aria-label`/`title` since there's no
+   visible text) that copies the shareable room link to the clipboard.
+   Visible to every player in the room, not just the host. The
    link is the bare room URL with no `/join` suffix — visiting it directly
    already shows the join screen when the visitor has no active session (see
    [5.6](#56-session-persistence-across-a-page-refresh)), so the suffix

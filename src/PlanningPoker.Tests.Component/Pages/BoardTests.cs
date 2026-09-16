@@ -330,6 +330,24 @@ public class BoardTests : BunitContext
     }
 
     [Fact]
+    public void CopyInviteLinkAsync_RevertsTheCopiedIndicator_AfterTheDelayElapses()
+    {
+        var hub = SetUpHub();
+        SetUpSession();
+        var hostId = Guid.NewGuid();
+        hub.JoinRoomResult.SetResult(NewJoinResult(hostId, isHost: true, players: new PlayerResponse(hostId, "Alice", false, true, null, false, null)));
+        var cut = Render<Board>(p => p.Add(x => x.RoomId, RoomId));
+
+        cut.Find(".copy-link-button").Click();
+        cut.Render();
+        Assert.Equal("Link copied!", cut.Find(".copy-link-button").GetAttribute("aria-label"));
+
+        cut.WaitForAssertion(
+            () => Assert.Equal("Copy invite link", cut.Find(".copy-link-button").GetAttribute("aria-label")),
+            TimeSpan.FromSeconds(3));
+    }
+
+    [Fact]
     public void DisposeAsync_UnsubscribesAndDisposesTheHub()
     {
         var hub = SetUpHub();

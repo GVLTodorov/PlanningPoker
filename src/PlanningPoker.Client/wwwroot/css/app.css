@@ -333,6 +333,25 @@ a {
     outline-offset: 2px;
 }
 
+/* The checkmark and clipboard icons are separate elements swapped in/out by @if, so a plain
+   CSS transition (which needs one persistent element) can't animate the swap -- pop each icon
+   in on mount instead, which animates both the copy -> check and the check -> copy revert. */
+.copy-link-button svg {
+    animation: copy-link-icon-pop 0.2s ease-out;
+}
+
+@keyframes copy-link-icon-pop {
+    from {
+        transform: scale(0.6);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
 .player-list {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(6rem, 1fr));
