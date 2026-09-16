@@ -166,10 +166,13 @@ unset, avatars simply don't render — nothing else breaks.
 | Variable              | Example                                                                |
 |------------------------|-------------------------------------------------------------------------|
 | `GIPHY_API_BASE_URL`   | `https://api.giphy.com/v1/gifs/trending?api_key=YOUR_GIPHY_API_KEY`    |
-| `GIPHY_API_QUERY`      | `limit=10&offset=0&rating=g&lang=en`                                   |
+| `GIPHY_API_QUERY`      | `limit=25&rating=g&lang=en`                                            |
 
 `GIPHY_API_BASE_URL` must point at `.../trending`, not `.../search` — see the gotcha noted in
-[REQUIREMENTS.MD Section 4.3](REQUIREMENTS.MD#43-operational-endpoints).
+[REQUIREMENTS.MD Section 4.3](REQUIREMENTS.MD#43-operational-endpoints). Don't set `offset` in
+`GIPHY_API_QUERY` — the app adds its own randomized offset to every Giphy request so repeated
+requests (e.g. mashing the avatar picker's refresh button) pull from different slices of the result
+set instead of always the same page.
 
 ### Getting a Giphy API key
 
@@ -198,5 +201,5 @@ services:
       - 8140:8080
     environment:
       - GIPHY_API_BASE_URL=https://api.giphy.com/v1/gifs/trending?api_key=YOUR_GIPHY_API_KEY
-      - GIPHY_API_QUERY=limit=10&offset=0&rating=g&lang=en
+      - GIPHY_API_QUERY=limit=25&rating=g&lang=en
 ```

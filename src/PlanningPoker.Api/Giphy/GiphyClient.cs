@@ -7,8 +7,10 @@ namespace PlanningPoker.Api.Giphy;
 /// Registered via <c>AddHttpClient&lt;IGiphyClient, GiphyClient&gt;()</c> (pooled/reused
 /// <see cref="HttpClient"/>, avoids socket exhaustion under load). The raw response batch is cached
 /// for <see cref="GiphyOptions.CacheTtlSeconds"/> to protect Giphy's rate limit during join/reveal
-/// bursts, but every call still re-shuffles the cached batch so repeated calls within the TTL window
-/// don't all return the identical selection.
+/// bursts; every call re-shuffles the cached batch so repeated calls within the TTL window don't all
+/// return the identical selection, and every fetch that refills the cache asks Giphy for a random
+/// <c>offset</c> (see <see cref="GiphyOptions.MaxOffset"/>) so a fresh batch is a different slice of
+/// the result set rather than always the same first page.
 /// </summary>
 public sealed class GiphyClient : IGiphyClient
 {
@@ -48,7 +50,11 @@ public sealed class GiphyClient : IGiphyClient
 
     private async Task<List<string>> FetchBatchAsync(CancellationToken cancellationToken)
     {
-        var requestUri = $"{_options.BaseUrl}&{_options.Query}";
+        // Appended last so it wins over any (now-unneeded) static "offset=" a deployment's
+        // GIPHY_API_QUERY might still set -- query-string parsers take the last occurrence of a
+        // repeated key.
+        var offset = Random.Shared.Next(0, _options.MaxOffset);
+        var requestUri = $"{_options.BaseUrl}&{_options.Query}&offset={offset}";
 
         using var response = await _httpClient.GetAsync(requestUri, cancellationToken);
         if (!response.IsSuccessStatusCode)

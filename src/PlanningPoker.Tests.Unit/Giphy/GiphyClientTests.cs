@@ -38,7 +38,23 @@ public class GiphyClientTests
 
         await client.GetRandomImageUrlsAsync(3);
 
-        Assert.Equal("https://example.test/search&q=test", handler.LastRequest!.RequestUri!.ToString());
+        Assert.StartsWith("https://example.test/search&q=test&offset=", handler.LastRequest!.RequestUri!.ToString());
+    }
+
+    [Fact]
+    public async Task GetRandomImageUrlsAsync_RandomizesTheOffset_AcrossSeparateFetches()
+    {
+        var handler = new StubHttpMessageHandler(HttpStatusCode.OK, ThreeItemBatch);
+
+        var requestUris = new HashSet<string>();
+        for (var i = 0; i < 20; i++)
+        {
+            var client = new GiphyClient(new HttpClient(handler), Options, new MemoryCache(new MemoryCacheOptions()));
+            await client.GetRandomImageUrlsAsync(3);
+            requestUris.Add(handler.LastRequest!.RequestUri!.ToString());
+        }
+
+        Assert.True(requestUris.Count > 1, "Expected the offset to vary across separate fetches.");
     }
 
     [Fact]

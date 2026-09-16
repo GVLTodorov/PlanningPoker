@@ -300,6 +300,11 @@ is a candidate for future work.
   GIF) rather than `original` (Giphy's full-resolution, unresized master
   file) — the picker only ever displays these at 96×72px, so the smaller
   rendition avoids shipping several MB of unused pixels per page load.
+- Every request the app makes to Giphy adds a randomized `offset` (don't set
+  one in `GIPHY_API_QUERY` — the app's own value wins), so each cache refresh
+  pulls a different slice of the result set instead of always the same page.
+  Combined with a large-enough `limit`, this keeps the avatar picker's
+  refresh button from just reshuffling the same handful of images.
 
 ### 6.1 Offline fallback: bundled AI-generated avatars (candidate for future work)
 
